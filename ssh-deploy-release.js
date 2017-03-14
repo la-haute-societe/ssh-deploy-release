@@ -957,7 +957,7 @@ function removeReleaseTask(callback) {
  * @param message
  */
 function logFatal(message) {
-    console.log(OS.EOL + chalk.red.bold('Fatal error : ' + message));
+    console.log(os.EOL + chalk.red.bold('Fatal error : ' + message));
     process.exit();
 }
 

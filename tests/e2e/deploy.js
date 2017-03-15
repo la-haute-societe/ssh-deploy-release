@@ -4,29 +4,20 @@ const Deployer = require('../../dist/ssh-deploy-release');
 
 
 const options = {
-    //mode: 'synchronize',
     localPath: 'src',
-    host: '79.137.72.16',
-    username: 'stagingsnd',
-    password: 'wn1RnzXDvUOA5tKUKPGL',
+    host: 'my.server.com',
+    username: 'username',
+    password: 'password',
     deployPath: '/var/www/vhosts/staging.soundboard.top/httpdocs/test',
     share: {
-        test: {
-            symlink: 'test',
-            mode: '0777'
-        },
-        'coucou' : 'coucou'
+        'target-folder' : 'link-name'
     },
     create: [
-        'a', 'b'
+        'this-folder', 'and-this'
     ],
     makeWritable: [
-        'a'
+        'this-file'
     ],
-    onAfterDeploy: (context, callback) => {
-        context.logger.subhead('Ls remote');
-        context.remote.exec('ls -la ' + context.options.deployPath, callback, true);
-    },
     onAfterDeployExecute: (context) => {
         context.logger.subhead('Ls remote');
         return [
@@ -35,9 +26,9 @@ const options = {
     }
 };
 
-// const deployer = new Deployer(options);
-// deployer.deployRelease(() => {
-// });
+const deployer = new Deployer(options);
+    deployer.deployRelease(() => {
+});
 
 
 console.log('ReMOVE __________');

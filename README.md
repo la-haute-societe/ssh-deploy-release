@@ -25,6 +25,7 @@ Example :
 
 
 - [Installation](#installation)
+- [Usage](#usage)
 - [Options](#options)
 - [Examples](#examples)
 - [Known issues](#known-issues)
@@ -35,7 +36,24 @@ Example :
 
 `npm install ssh-deploy-release`
 
+## Usage
 
+```js
+const Deployer = require('ssh-deploy-release');
+
+const options = {
+    localPath: 'src',
+    host: 'my.server.com',
+    username: 'username',
+    password: 'password',
+    deployPath: '/var/www/vhosts/staging.soundboard.top/httpdocs/test'
+};
+
+const deployer = new Deployer(options);
+deployer.deployRelease(() => {
+    console.log('Ok !')
+});
+```
 
 ## Options
 

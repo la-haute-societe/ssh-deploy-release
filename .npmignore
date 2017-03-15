@@ -1,3 +1,8 @@
 node_modules
 npm-debug.log
 .idea
+yarn.lock
+release.tar.gz
+src/
+tests/
+npm-debug.log

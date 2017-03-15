@@ -8,113 +8,33 @@ const path       = require('path');
 const fs         = require('fs');
 const Connection = require('ssh2');
 const client     = require('scp2');
-const moment     = require('moment');
-const timestamp  = moment().utc().format('YYYY-MM-DD-HH-mm-ss-SSS-UTC');
 const async      = require('async');
-const extend     = require('extend');
 const filesize   = require('filesize');
 const exec       = require('child_process').exec;
-const chalk      = require('chalk');
 const ora        = require('ora');
-const os         = require('os');
 
-// Default options
-var defaultOptions = {
+const configuration = require('./configuration');
+const logger        = require('./logger.js');
 
-    debug: false,
-
-    // Deployment mode ('archive' or 'synchronize')
-    mode: 'archive',
-    archiveName: 'release.tar.gz',
-
-    // Archive type : 'zip' or 'tar'
-    archiveType: 'tar',
-    gzip: {
-        gzip: true,
-        gzipOptions: {
-            level: 5
-        }
-    },
-    deleteLocalArchiveAfterDeployment: true,
-
-
-    // SSH / SCP connection
-    port: 22,
-    host: '',
-    username: '',
-    password: '',
-    privateKeyFile: null,
-    readyTimeout: 20000,
-
-    // Folders / link
-    currentReleaseLink: 'www',
-    sharedFolder: 'shared',
-    releasesFolder: 'releases',
-    localPath: 'www',
-    deployPath: '',
-    synchronizedFolder: 'synchronized',
-    rsyncOptions: '',
-
-    // Release
-    releasesToKeep: '3',
-    tag: timestamp,
-
-    // Excluded files
-    exclude: [],
-
-    // Folders to share
-    share: {},
-
-    // Directories to create
-    create: [],
-
-    // File to make writable
-    makeWritable: [],
-
-    // Files to make executable
-    makeExecutable: [],
-
-    // Allow remove release on remote
-    // Warning !!
-    allowRemove: false,
-
-    // Callback
-    onBeforeDeploy: function (deployer, callback) {
-        callback();
-    },
-    onBeforeLink: function (deployer, callback) {
-        callback();
-    },
-    onAfterDeploy: function (deployer, callback) {
-        callback();
-    },
-    // Callback commands
-    onBeforeDeployExecute: function (deployer) {
-        return [];
-    },
-    onBeforeLinkExecute: function (deployer) {
-        return [];
-    },
-    onAfterDeployExecute: function (deployer) {
-        return [];
-    },
-};
 
 var options     = {};
 var releaseTag  = null;
 var releasePath = null;
 var connection  = null;
 var deployer    = {};
-
+const noop      = function () {
+};
 
 /**
  * Initialize
  */
 function init(appOptions) {
 
-    options     = getConfiguration(appOptions);
-    releaseTag  = getReleaseTag();
-    releasePath = getReleasePath();
+ //   options = configuration.merge(appOptions);
+
+    // logger.setDebug(options.debug);
+    // releaseTag  = getReleaseTag();
+    // releasePath = getReleasePath();
     connection  = null;
     deployer    = {
         options: options,
@@ -137,10 +57,14 @@ function init(appOptions) {
  */
 function removeRelease(appOptions, done) {
 
+    if (!done) {
+        done = noop
+    }
+
     init(appOptions);
 
     if (!options.allowRemove) {
-        logFatal('Remove release is not allowed. (check "allowRemove" option)');
+        logger.fatal('Remove release is not allowed. (check "allowRemove" option)');
         return;
     }
 
@@ -157,6 +81,10 @@ function removeRelease(appOptions, done) {
  * Launch release deployment
  */
 function deployRelease(appOptions, done) {
+
+    if (!done) {
+        done = noop
+    }
 
     init(appOptions);
 
@@ -186,25 +114,6 @@ function deployRelease(appOptions, done) {
     });
 }
 
-/**
- * Return configuration
- * merge deafult prop
- */
-function getConfiguration(appOptions) {
-    var options = extend(
-        {},
-        defaultOptions,
-        appOptions
-    );
-
-    // Fix : "writeable" is an alias of "writable"
-    if (options.writeable) {
-        options.writable = options.writeable;
-    }
-
-    return options;
-}
-
 
 /**
  * Get SCP options
@@ -212,7 +121,7 @@ function getConfiguration(appOptions) {
  * @returns {{port: number, host: (*|string|string|string|string), username: (*|string|string|string), readyTimeout: number}}
  */
 function getScpOptions(options) {
-    var scpOptions = {
+    const scpOptions = {
         port: options.port,
         host: options.host,
         username: options.username,
@@ -253,14 +162,16 @@ function getScpOptions(options) {
  * @returns {*|string}
  */
 function getReleaseTag() {
-    var releaseTag = options.tag;
+    let releaseTag = options.tag;
+
+    // Execute function if needed
     if (typeof options.tag == 'function') {
         releaseTag = options.tag()
     }
 
     // Just a security check, avoiding empty tags that could mess up the file system
     if (releaseTag == '') {
-        releaseTag = defaults.tag;
+        releaseTag = configuration.default.tag;
     }
     return releaseTag;
 }
@@ -284,22 +195,22 @@ function getReleasePath() {
 function execRemote(cmd, showLog, next) {
     connection.exec(cmd, function (error, stream) {
         if (error) {
-            logError('Error while deploying..');
-            logError(error);
+            logger.error('Error while deploying..');
+            logger.error(error);
             deleteRemoteRelease(closeConnectionTask);
         }
 
         stream.on('data', function (data, extended) {
             if (showLog) {
-                log((extended === 'stderr' ? 'STDERR: ' : 'STDOUT: ') + data);
+                logger.log((extended === 'stderr' ? 'STDERR: ' : 'STDOUT: ') + data);
                 return;
             }
 
-            logDebug((extended === 'stderr' ? 'STDERR: ' : 'STDOUT: ') + data);
+            logger.debug((extended === 'stderr' ? 'STDERR: ' : 'STDOUT: ') + data);
         });
 
         stream.on('end', function () {
-            logDebug('Remote command : ' + cmd);
+            logger.debug('Remote command : ' + cmd);
             if (!error) {
                 next();
             }
@@ -321,10 +232,10 @@ function getCurrentPath() {
  * @param callback
  */
 function deleteRemoteRelease(callback) {
-    var command = 'rm -rf ' + releasePath;
-    logSubhead('Delete release on remote');
+    const command = 'rm -rf ' + releasePath;
+    logger.subhead('Delete release on remote');
     execRemote(command, options.debug, function () {
-        logOk('Done');
+        logger.ok('Done');
         callback();
     });
 }
@@ -336,7 +247,7 @@ function deleteRemoteRelease(callback) {
  * @param callback
  */
 function createSymboliclink(target, link, callback) {
-    var commands = [
+    const commands = [
         'mkdir -p ' + link, // Create the parent of the symlink target
         'rm -rf ' + link,
         'mkdir -p ' + realpath(link + '/../' + target), // Create the symlink target
@@ -357,8 +268,7 @@ function createSymboliclink(target, link, callback) {
  * @returns {XML|string|void|*}
  */
 function getReversePath(downwardPath) {
-    var upwardPath = downwardPath.replace(/([^\/]+)/g, '..');
-    return upwardPath;
+    return downwardPath.replace(/([^\/]+)/g, '..');
 }
 
 /**
@@ -367,12 +277,12 @@ function getReversePath(downwardPath) {
  * @returns {string}
  */
 function realpath(path) {
-    var arr = [] // Save the root, if not given
 
     // Explode the given path into it's parts
-    arr  = path.split('/') // The path is an array now
+    let arr = path.split('/') // The path is an array now
+
     path = [] // Foreach part make a check
-    for (var k in arr) { // This is'nt really interesting
+    for (let k in arr) { // This is'nt really interesting
         if (arr[k] === '.') {
             continue
         }
@@ -424,10 +334,10 @@ function businessCallbackExecute(commandsFunction, callback) {
 
     // Execute each command
     async.eachSeries(commands, (command, innerCallback) => {
-        logSubhead('Execute on remote : ' + command);
+        logger.subhead('Execute on remote : ' + command);
         deployer.execRemote(command, true, innerCallback);
     }, () => {
-        logOk('Done');
+        logger.ok('Done');
         callback();
     });
 }
@@ -473,22 +383,22 @@ function compressReleaseTask(callback) {
         return;
     }
 
-    logSubhead('Compress release');
+    logger.subhead('Compress release');
     let spinner = ora('Compressing').start();
 
-    var archiver = require('archiver');
-    var output   = fs.createWriteStream(options.archiveName);
-    var archive  = archiver(options.archiveType, options.gzip);
+    const archiver = require('archiver');
+    const output   = fs.createWriteStream(options.archiveName);
+    const archive  = archiver(options.archiveType, options.gzip);
 
     output.on('close', function () {
         spinner.stop();
-        logOk('Archive created : ' + filesize(archive.pointer()));
+        logger.ok('Archive created : ' + filesize(archive.pointer()));
         callback();
     });
 
     archive.on('error', function (err) {
         spinner.stop();
-        logError('Error while compressing');
+        logger.error('Error while compressing');
         throw err;
     });
 
@@ -507,7 +417,7 @@ function compressReleaseTask(callback) {
  * Connect to remote
  */
 function connectToRemoteTask(callback) {
-    logSubhead('Connect to ' + options.host);
+    logger.subhead('Connect to ' + options.host);
     let spinner = ora('Connecting').start();
 
     connection = new Connection();
@@ -515,7 +425,7 @@ function connectToRemoteTask(callback) {
     // Ready event
     connection.on('ready', function () {
         spinner.stop();
-        logOk('Connected');
+        logger.ok('Connected');
         callback();
     });
 
@@ -523,13 +433,13 @@ function connectToRemoteTask(callback) {
     connection.on('error', function (error) {
         spinner.stop();
         if (error) {
-            logFatal(error);
+            logger.fatal(error);
         }
     });
 
     // Close event
     connection.on('close', function (hadError) {
-        logSubhead("Closed from " + options.host);
+        logger.subhead("Closed from " + options.host);
         return true;
     });
 
@@ -544,13 +454,13 @@ function connectToRemoteTask(callback) {
  * @param callback
  */
 function createReleaseFolderOnRemoteTask(callback) {
-    var command = 'mkdir -p ' + releasePath;
+    const command = 'mkdir -p ' + releasePath;
 
-    logSubhead('Create release folder on remote');
-    log(' - ' + releasePath);
+    logger.subhead('Create release folder on remote');
+    logger.log(' - ' + releasePath);
 
     execRemote(command, options.debug, function () {
-        logOk('Done');
+        logger.ok('Done');
         callback();
     });
 }
@@ -566,9 +476,9 @@ function uploadArchiveTask(callback) {
         return;
     }
 
-    var build = options.archiveName;
+    const build = options.archiveName;
 
-    logSubhead('Upload archive to remote');
+    logger.subhead('Upload archive to remote');
     let spinner = ora('Uploading').start();
 
     client.scp(build, {
@@ -577,11 +487,11 @@ function uploadArchiveTask(callback) {
         spinner.stop();
 
         if (error) {
-            logError(error);
+            logger.error(error);
             return;
         }
 
-        logOk('Done');
+        logger.ok('Done');
         callback();
     });
 }
@@ -598,7 +508,7 @@ function uploadReleaseTask(callback) {
         return;
     }
 
-    logSubhead('Synchronize remote server');
+    logger.subhead('Synchronize remote server');
     const spinner = ora('Synchronizing').start();
 
     const source = options.localPath + '/';
@@ -616,7 +526,7 @@ function uploadReleaseTask(callback) {
     // Use privateKey
     else
         if (options.privateKeyFile != null) {
-            logFatal('PrivateKey not compatible with synchronize mode.');
+            logger.fatal('PrivateKey not compatible with synchronize mode.');
         }
 
     // Concat
@@ -627,25 +537,25 @@ function uploadReleaseTask(callback) {
         spinner.stop();
 
         if (error) {
-            logFatal(error);
+            logger.fatal(error);
         }
 
         if (stderr) {
-            log(stdout);
+            logger.log(stdout);
         }
 
         if (stderr) {
-            log(stderr);
+            logger.log(stderr);
         }
 
-        logOk('Done');
+        logger.ok('Done');
 
-        logSubhead('Copy release');
+        logger.subhead('Copy release');
         const spinnerCopy = ora('Copying').start();
 
         execRemote(copy, true, function (result) {
             spinnerCopy.stop();
-            logOk('Done');
+            logger.ok('Done');
             callback();
         });
     });
@@ -671,20 +581,20 @@ function decompressArchiveOnRemoteTask(callback) {
 
     // Check archiveType is supported
     if (!untarMap[options.archiveType]) {
-        logFatal(options.archiveType + ' not supported.');
+        logger.fatal(options.archiveType + ' not supported.');
     }
 
-    var goToCurrent = "cd " + releasePath;
-    var untar       = untarMap[options.archiveType];
-    var cleanup     = "rm " + path.posix.join(releasePath, options.archiveName);
-    var command     = goToCurrent + " && " + untar + " && " + cleanup;
+    const goToCurrent = "cd " + releasePath;
+    const untar       = untarMap[options.archiveType];
+    const cleanup     = "rm " + path.posix.join(releasePath, options.archiveName);
+    const command     = goToCurrent + " && " + untar + " && " + cleanup;
 
-    logSubhead('Decompress archive on remote');
+    logger.subhead('Decompress archive on remote');
     let spinner = ora('Decompressing').start();
 
     execRemote(command, options.debug, function () {
         spinner.stop();
-        logOk('Done');
+        logger.ok('Done');
         callback();
     });
 }
@@ -715,7 +625,7 @@ function onBeforeLinkExecuteTask(callback) {
  */
 function updateSharedSymbolicLinkOnRemoteTask(callback) {
 
-    logSubhead('Update shared symlink on remote');
+    logger.subhead('Update shared symlink on remote');
 
     async.eachSeries(Object.keys(options.share), function (currentSharedFolder, itemCallback) {
         const configValue = options.share[currentSharedFolder];
@@ -740,21 +650,21 @@ function updateSharedSymbolicLinkOnRemoteTask(callback) {
         const upwardPath = getReversePath(symlinkName);
         const target     = upwardPath + '/../' + options.sharedFolder + '/' + currentSharedFolder;
 
-        log(' - ' + symlinkName + ' ==> ' + currentSharedFolder);
+        logger.log(' - ' + symlinkName + ' ==> ' + currentSharedFolder);
         createSymboliclink(target, linkPath, () => {
             if (!mode) {
                 itemCallback();
                 return;
             }
 
-            log('   chmod ' + mode);
+            logger.log('   chmod ' + mode);
 
             remoteChmod(linkPath, mode, () => {
                 itemCallback();
             });
         });
     }, () => {
-        logOk('Done');
+        logger.ok('Done');
 
         callback();
     });
@@ -772,18 +682,18 @@ function createFolderTask(callback) {
         return;
     }
 
-    logSubhead('Create folders on remote');
+    logger.subhead('Create folders on remote');
 
     async.eachSeries(options.create, function (currentFolderToCreate, itemCallback) {
-        var path    = releasePath + '/' + currentFolderToCreate;
-        var command = 'mkdir ' + path + ' && chmod ugo+w ' + path;
+        const path    = releasePath + '/' + currentFolderToCreate;
+        const command = 'mkdir ' + path + ' && chmod ugo+w ' + path;
 
-        log(' - ' + currentFolderToCreate);
+        logger.log(' - ' + currentFolderToCreate);
         execRemote(command, options.debug, function () {
             itemCallback();
         });
     }, () => {
-        logOk('Done');
+        logger.ok('Done');
         callback();
     });
 }
@@ -799,18 +709,18 @@ function makeDirectoriesWritableTask(callback) {
         return;
     }
 
-    logSubhead('Make folders writable on remote');
+    logger.subhead('Make folders writable on remote');
 
     async.eachSeries(options.makeWritable, function (currentFolderToMakeWritable, itemCallback) {
         const path = releasePath + '/' + currentFolderToMakeWritable;
         const mode = 'ugo+w';
 
-        log(' - ' + currentFolderToMakeWritable);
+        logger.log(' - ' + currentFolderToMakeWritable);
         remoteChmod(path, mode, () => {
             itemCallback();
         });
     }, () => {
-        logOk('Done');
+        logger.ok('Done');
         callback();
     });
 }
@@ -825,15 +735,15 @@ function makeFilesExecutableTask(callback) {
         return;
     }
 
-    logSubhead('Make files executables on remote');
+    logger.subhead('Make files executables on remote');
 
     async.eachSeries(options.makeExecutable, function (currentFileToMakeExecutable, itemCallback) {
-        var path    = releasePath + '/' + currentFileToMakeExecutable;
-        var command = 'chmod ugo+x ' + path;
+        const path    = releasePath + '/' + currentFileToMakeExecutable;
+        const command = 'chmod ugo+x ' + path;
 
-        log(' - ' + currentFileToMakeExecutable);
+        logger.log(' - ' + currentFileToMakeExecutable);
         execRemote(command, options.debug, function () {
-            logOk('Done');
+            logger.ok('Done');
             itemCallback();
         });
     }, callback);
@@ -846,12 +756,12 @@ function makeFilesExecutableTask(callback) {
  */
 function updateCurrentSymbolicLinkOnRemoteTask(callback) {
 
-    logSubhead('Update current release symlink on remote');
+    logger.subhead('Update current release symlink on remote');
 
     var target = options.releasesFolder + '/' + releaseTag;
 
     createSymboliclink(target, getCurrentPath(), function () {
-        logOk('Done');
+        logger.ok('Done');
         callback();
     });
 }
@@ -890,7 +800,7 @@ function remoteCleanupTask(callback) {
         options.releasesToKeep = 1;
     }
 
-    var command = "cd " + path.posix.join(
+    const command = "cd " + path.posix.join(
             options.deployPath,
             options.releasesFolder
         ) + " && rm -rf `ls -r " + path.posix.join(
@@ -898,12 +808,12 @@ function remoteCleanupTask(callback) {
             options.releasesFolder
         ) + " | awk 'NR>" + options.releasesToKeep + "'`";
 
-    logSubhead('Remove old builds on remote');
+    logger.subhead('Remove old builds on remote');
     let spinner = ora('Removing').start();
 
     execRemote(command, options.debug, function () {
         spinner.stop();
-        logOk('Done');
+        logger.ok('Done');
         callback();
     });
 }
@@ -920,9 +830,9 @@ function deleteLocalArchiveTask(callback) {
         return;
     }
 
-    logSubhead('Delete local archive');
+    logger.subhead('Delete local archive');
     fs.unlink(options.archiveName);
-    logOk('Done');
+    logger.ok('Done');
     callback();
 }
 
@@ -943,65 +853,11 @@ function closeConnectionTask(callback) {
  * @param callback
  */
 function removeReleaseTask(callback) {
-    logSubhead('Remove releases on remote');
+    logger.subhead('Remove releases on remote');
 
-    var command = "rm -rf " + options.deployPath;
+    const command = "rm -rf " + options.deployPath;
     execRemote(command, options.debug, function () {
-        logOk('Done');
+        logger.ok('Done');
         callback();
     });
-}
-
-/**
- * Log fatal error and exit process
- * @param message
- */
-function logFatal(message) {
-    console.log(os.EOL + chalk.red.bold('Fatal error : ' + message));
-    process.exit();
-}
-
-/**
- * Log subhead
- * @param message
- */
-function logSubhead(message) {
-    console.log(os.EOL + chalk.bold.underline(message));
-}
-
-/**
- * Log "ok" message
- * @param message
- */
-function logOk(message) {
-    console.log(chalk.green(message));
-}
-
-
-/**
- * Log error message
- * @param message
- */
-function logError(message) {
-    console.log(chalk.red(message));
-}
-
-/**
- * Log only if options.debug is enabled
- * @param message
- */
-function logDebug(message) {
-    if (!options.debug) {
-        return;
-    }
-
-    console.log(os.EOL + chalk.cyan(message));
-}
-
-/**
- * Simple log
- * @param message
- */
-function log(message) {
-    console.log(message);
 }

@@ -1,2 +1,5 @@
 /.idea
 /node_modules
+/yarn.lock
+/release.tar.gz
+npm-debug.log

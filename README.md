@@ -306,3 +306,25 @@ onAfterDeployExecute:[
 ```
 
 See this issue : https://github.com/mscdex/ssh2/issues/77
+
+
+## Contributing
+
+```
+# Build
+npm run build
+
+# Build + watch
+npm run build -- --watch
+
+# Launch tests
+npm test
+
+# Launch tests + watch
+npm test -- --watch
+```
+
+## Changelog
+
+OnBefore.. callback, deployer is now context
+

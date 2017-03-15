@@ -1,17 +1,9 @@
 # ssh-deploy-release
 
-Create an archive of "localPath" (except excluded folders). 
+Deploy releases over SSH with rsync, archive ZIP / TAR, symlinks, SCP ...
 
-Copy this archive to the remote server using SCP. 
 
-Decompress the release on remote server. 
-
-Create "shared" folders symlink. 
-
-Create release symlink. 
-
-Clean temporary files and old releases.
-
+Example :
 
 ```
 /deployPath
@@ -25,6 +17,8 @@ Clean temporary files and old releases.
     |       ├── ...
     |       └── logs --> symlink to shared/logs
     |
+    ├── synchronized --> folder synchronized with rsync 
+    |
     └── shared
         └── logs                    
 ```
@@ -34,6 +28,7 @@ Clean temporary files and old releases.
 - [Options](#options)
 - [Examples](#examples)
 - [Known issues](#known-issues)
+- [Contributing](#contributing)
 
 
 ## Installation
@@ -308,6 +303,7 @@ onAfterDeployExecute:[
 See this issue : https://github.com/mscdex/ssh2/issues/77
 
 
+
 ## Contributing
 
 ```
@@ -323,8 +319,3 @@ npm test
 # Launch tests + watch
 npm test -- --watch
 ```
-
-## Changelog
-
-OnBefore.. callback, deployer is now context
-

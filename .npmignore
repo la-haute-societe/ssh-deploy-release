@@ -3,6 +3,7 @@ npm-debug.log
 .idea
 yarn.lock
 release.tar.gz
+release.zip
 src/
 tests/
 npm-debug.log

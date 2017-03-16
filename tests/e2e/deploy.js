@@ -4,13 +4,15 @@ const Deployer = require('../../dist/ssh-deploy-release');
 
 
 const options = {
+    debug: true,
     localPath: 'src',
     host: 'my.server.com',
     username: 'username',
     password: 'password',
-    deployPath: '/var/www/vhosts/staging.soundboard.top/httpdocs/test',
+    deployPath: '/var/deploy/path',
+
     share: {
-        'target-folder' : 'link-name'
+        'target-folder': 'link-name'
     },
     create: [
         'this-folder', 'and-this'
@@ -19,7 +21,7 @@ const options = {
         'this-file'
     ],
     onAfterDeployExecute: (context) => {
-        context.logger.subhead('Ls remote');
+        context.logger.subhead('Remote ls');
         return [
             'ls -la ' + context.options.deployPath
         ]
@@ -27,11 +29,8 @@ const options = {
 };
 
 const deployer = new Deployer(options);
-    deployer.deployRelease(() => {
-});
+deployer.deployRelease();
 
 
-console.log('ReMOVE __________');
-const deployerRemove = new Deployer(options);
-deployerRemove.removeRelease(() => {
-});
+// const deployerRemove = new Deployer(options);
+// deployerRemove.removeRelease();

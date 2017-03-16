@@ -32,6 +32,7 @@ module.exports = function () {
         this.remote = new Remote(this.options);
 
         this.logger = logger;
+        this.logger.setDebug(this.options.debug);
 
         this.context = {
             options: this.options,
@@ -67,14 +68,21 @@ module.exports = function () {
         };
     }
 
-    /**
-     * Deploy release
-     */
-
-
     _createClass(_class, [{
+        key: 'noop',
+        value: function noop() {}
+        // Nothing
+
+
+        /**
+         * Deploy release
+         */
+
+    }, {
         key: 'deployRelease',
         value: function deployRelease(done) {
+            done = done || this.noop;
+
             async.series([this.connectToRemoteTask.bind(this), this.onBeforeDeployTask.bind(this), this.onBeforeDeployExecuteTask.bind(this), this.compressReleaseTask.bind(this), this.createReleaseFolderOnRemoteTask.bind(this), this.uploadArchiveTask.bind(this), this.uploadReleaseTask.bind(this), this.decompressArchiveOnRemoteTask.bind(this), this.onBeforeLinkTask.bind(this), this.onBeforeLinkExecuteTask.bind(this), this.updateSharedSymbolicLinkOnRemoteTask.bind(this), this.createFolderTask.bind(this), this.makeDirectoriesWritableTask.bind(this), this.makeFilesExecutableTask.bind(this), this.updateCurrentSymbolicLinkOnRemoteTask.bind(this), this.onAfterDeployTask.bind(this), this.onAfterDeployExecuteTask.bind(this), this.remoteCleanupTask.bind(this), this.deleteLocalArchiveTask.bind(this), this.closeConnectionTask.bind(this)], function () {
                 done();
             });
@@ -87,6 +95,8 @@ module.exports = function () {
     }, {
         key: 'removeRelease',
         value: function removeRelease(done) {
+            done = done || this.noop;
+
             async.series([this.connectToRemoteTask.bind(this), this.removeReleaseTask.bind(this), this.closeConnectionTask.bind(this)], function () {
                 done();
             });
@@ -288,7 +298,7 @@ module.exports = function () {
                 logger.fatal(this.options.archiveType + ' not supported.');
             }
 
-            var command = ["cd " + this.release.path, untarMap[this.options.archiveType], "rm " + path.posix.join(this.release.path, this.options.archiveName)].join(' && ');
+            var command = ["cd " + this.release.path, untarMap[this.options.archiveType], "rm " + path.posix.join(this.release.path, this.options.archiveName)].join('\n');
 
             this.remote.exec(command, function () {
                 spinner.stop();

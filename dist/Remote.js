@@ -214,17 +214,11 @@ module.exports = function () {
     }, {
         key: 'createSymboliclink',
         value: function createSymboliclink(target, link, done) {
-            var _this3 = this;
-
             var commands = ['mkdir -p ' + link, // Create the parent of the symlink target
             'rm -rf ' + link, 'mkdir -p ' + utils.realpath(link + '/../' + target), // Create the symlink target
-            'ln -nfs ' + target + ' ' + link];
+            'ln -nfs ' + target + ' ' + link].join('\n');
 
-            async.eachSeries(commands, function (command, itemDone) {
-                _this3.exec(command, function () {
-                    itemDone();
-                });
-            }, done);
+            this.exec(commands, done);
         }
 
         /**
@@ -253,7 +247,7 @@ module.exports = function () {
     }, {
         key: 'createFolder',
         value: function createFolder(path, done) {
-            var command = ['mkdir ' + path, 'chmod ugo+w ' + path].join(' && ');
+            var command = ['mkdir -p ' + path, 'chmod ugo+w ' + path].join('\n');
             this.exec(command, done);
         }
 
@@ -267,7 +261,7 @@ module.exports = function () {
     }, {
         key: 'removeOldFolders',
         value: function removeOldFolders(folder, numberToKeep, done) {
-            var command = ["cd " + folder, "rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"].join(' && ');
+            var command = ["cd " + folder, "rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"].join('\n');
 
             this.exec(command, function () {
                 done();

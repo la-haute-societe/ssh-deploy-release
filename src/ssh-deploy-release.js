@@ -25,6 +25,7 @@ module.exports = class {
         this.remote = new Remote(this.options);
 
         this.logger = logger;
+        this.logger.setDebug(this.options.debug);
 
         this.context = {
             options: this.options,
@@ -61,10 +62,17 @@ module.exports = class {
     }
 
 
+    noop() {
+        // Nothing
+    }
+
+
     /**
      * Deploy release
      */
     deployRelease(done) {
+        done = done || this.noop;
+
         async.series([
             this.connectToRemoteTask.bind(this),
             this.onBeforeDeployTask.bind(this),
@@ -96,6 +104,8 @@ module.exports = class {
      * Remove release
      */
     removeRelease(done) {
+        done = done || this.noop;
+
         async.series([
             this.connectToRemoteTask.bind(this),
             this.removeReleaseTask.bind(this),
@@ -298,7 +308,7 @@ module.exports = class {
             "cd " + this.release.path,
             untarMap[this.options.archiveType],
             "rm " + path.posix.join(this.release.path, this.options.archiveName),
-        ].join(' && ');
+        ].join('\n');
 
         this.remote.exec(command, () => {
             spinner.stop();

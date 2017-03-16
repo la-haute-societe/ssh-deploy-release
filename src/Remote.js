@@ -201,13 +201,9 @@ module.exports = class {
             'rm -rf ' + link,
             'mkdir -p ' + utils.realpath(link + '/../' + target), // Create the symlink target
             'ln -nfs ' + target + ' ' + link
-        ];
+        ].join('\n');
 
-        async.eachSeries(commands, (command, itemDone) => {
-            this.exec(command, () => {
-                itemDone();
-            });
-        }, done);
+        this.exec(commands, done);
     }
 
     /**
@@ -231,9 +227,9 @@ module.exports = class {
      */
     createFolder(path, done) {
         const command = [
-            'mkdir ' + path,
+            'mkdir -p ' + path,
             'chmod ugo+w ' + path
-        ].join(' && ');
+        ].join('\n');
         this.exec(command, done);
     }
 
@@ -248,7 +244,7 @@ module.exports = class {
         const command = [
             "cd " + folder,
             "rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"
-        ].join(' && ');
+        ].join('\n');
 
 
         this.exec(command, () => {

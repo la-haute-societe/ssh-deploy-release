@@ -27,7 +27,6 @@ Example :
 - [Installation](#installation)
 - [Usage](#usage)
 - [Options](#options)
-- [Examples](#examples)
 - [Known issues](#known-issues)
 - [Contributing](#contributing)
 
@@ -36,7 +35,11 @@ Example :
 
 `npm install ssh-deploy-release`
 
+
+
 ## Usage
+
+### Deploy release
 
 ```js
 const Deployer = require('ssh-deploy-release');
@@ -46,7 +49,7 @@ const options = {
     host: 'my.server.com',
     username: 'username',
     password: 'password',
-    deployPath: '/var/www/vhosts/staging.soundboard.top/httpdocs/test'
+    deployPath: '/var/www/vhost/path/to/project'
 };
 
 const deployer = new Deployer(options);
@@ -55,9 +58,28 @@ deployer.deployRelease(() => {
 });
 ```
 
-## Options
 
-### SCP connection
+### Remove release
+
+```js
+const Deployer = require('ssh-deploy-release');
+
+const options = {
+    localPath: 'src',
+    host: 'my.server.com',
+    username: 'username',
+    password: 'password',
+    deployPath: '/var/www/vhost/path/to/project',
+    allowRemove: true
+};
+
+const deployer = new Deployer(options);
+deployer.removeRelease(() => {
+    console.log('Ok !')
+});
+```
+
+## Options
 
 ssh-deploy-release uses ssh2 to handle SSH connections.  
 The `options` object is forwarded to `ssh2` methods,
@@ -65,93 +87,97 @@ which means you can set all `ssh2` options:
 
  - [ssh2 documentation](https://github.com/mscdex/ssh2)
 
-#### port
+#### options.debug
+If ``true``, will display all commands.
+
+Default : ``false``
+
+#### options.port
 Port used to connect to the remote server.
 
 Default : 22
 
-#### host
+#### options.host
 Remote server hostname.
 
-#### username
+#### options.username
 Username used to connect to the remote server.
 
-#### password
+#### options.password
 Password used to connect to the remote server.
 
-#### privateKeyFile
+#### options.privateKeyFile
 For an encrypted private key, this is the passphrase used to decrypt it.
 
 Default: (null)
 
 
-#### passphrase
+#### options.passphrase
 
 Default: null
 
-#### mode
+#### options.mode
 'archive' : Deploy an archive and decompress it on the remote server.
 
-'synchronize' : Use *rsync*. Files are synchronized in the `synchronized` folder on the remote server.
+'synchronize' : Use *rsync*. Files are synchronized in the `options.synchronized` folder on the remote server.
 
 Default : 'archive'
 
-
-#### archiveType
+#### options.archiveType
 'zip' : Use *zip* compression (``unzip`` command on remote)
 
 'tar' : Use *tar gz* compression (``tar`` command on remote)
 
 Default : 'tar'
 
-#### archiveName
+#### options.archiveName
 Name of the archive.
 
 Default : 'release.tar.gz'
 
 
-#### deleteLocalArchiveAfterDeployment
+#### options.deleteLocalArchiveAfterDeployment
 Delete the local archive after the deployment. 
 
 Default : true
 
-#### readyTimeout
+#### options.readyTimeout
 SCP connection timeout duration.
 
 Default : 20000
 
 ### Path
-#### currentReleaseLink
+#### options.currentReleaseLink
 Name of the current release symbolic link. Relative to `deployPath`.
 
 Defaut : 'www'
 
-#### sharedFolder
+#### options.sharedFolder
 Name of the folder containing shared folders. Relative to `deployPath`.
 
 Default : 'shared'
 
-#### releasesFolder
+#### options.releasesFolder
 Name of the folder containing releases. Relative to `deployPath`.
 
 Default : 'releases'
 
-#### localPath
+#### options.localPath
 Name of the local folder to deploy.
 
 Default : 'www'
 
-#### deployPath
+#### options.deployPath
 Absolute path on the remote server where releases will be deployed.
 Do not specify *currentReleaseLink* (or *www* folder) in this path.
 
-#### synchronizedFolder
+#### options.synchronizedFolder
 Name of the remote folder where *rsync* synchronize release.
 Used when `mode` is 'synchronize'.
 
 Default : 'www'
 
-#### rsyncOptions
+#### options.rsyncOptions
 Additional options for rsync process. 
 
 Default : ''
@@ -160,26 +186,28 @@ Default : ''
 rsyncOptions : '--exclude-from="exclude.txt" --delete-excluded'
 ```
 
+
+
 ### Releases
 
-#### releasesToKeep
+#### options.releasesToKeep
 Number of releases to keep on the remote server.
 
 Default : 3
 
-#### tag
+#### options.tag
 Name of the release. Must be different for each release.
 
 Default : Use current timestamp.
 
-#### exclude
+#### options.exclude
 List of paths (*glob* format) to **not** deploy. Paths must be relative to `localPath`.
 
-Not working with `mode: 'synchronize'`, use `rsyncOptions` instead.
+Not compatible with `mode: 'synchronize'`, use `rsyncOptions` instead to exclude some files.
 
 Default : []
 
-#### share
+#### options.share
 List of folders to "share" between releases. A symlink will be created for each item.  
 Item can be either a string or an object (to specify the mode to set to the symlink target).
 
@@ -196,19 +224,19 @@ Keys = Folder to share (relative to `sharedFolder`)
 
 Values = Symlink path  (relative to release folder)
 
-#### create
+#### options.create
 List of folders to create on the remote server.
 
 
-#### makeWritable
+#### options.makeWritable
 List of files to make writable on the remote server. (chmod ugo+w)
 
 
-#### makeExecutable
+#### options.makeExecutable
 List of files to make executable on the remote server. (chmod ugo+x)
 
 
-#### allowRemove
+#### options.allowRemove
 If true, the remote release folder can be deleted with `--remove` cli parameter.
 
 Default: false
@@ -217,34 +245,87 @@ Default: false
 
 ### Callback
 
-##### Deployer object
+##### context object
 The following object is passed to ``onXXXDeploy`` functions :
 ```js
 {
-    // Current configuration
-    options: { ... },
+    // Loaded configuration
+    options: { },
     
-    // Current release name
-    releaseTag: '2017-01-25-08-40-15-138-UTC',
+    // Release
+    release: {
+         // Current release name
+         tag: '2017-01-25-08-40-15-138-UTC',
+         
+         // Current release path on the remote server
+         path: '/opt/.../releases/2017-01-25-08-40-15-138-UTC',           
+    },
     
-    // Current release path on the remote server
-    releasePath: '/opt/.../releases/2017-01-25-08-40-15-138-UTC',
+    // Logger methods
+    logger: {
+        // Log fatal error and stop process
+        fatal: (message) => {},
+        
+        // Log 'subhead' message
+        subhead: (message) => {},
+        
+        // Log 'ok' message
+        ok: (message) => {},
+        
+        // Log 'error' message and continue process
+        error: (message) => {},
+        
+        // Log message, only if options.debug is true
+        debug: (message) => {},
+        
+        // Log message
+        log: (message) => {},
+        
+        // Start a spinner and display message
+        // return a stop() 
+        startSpinner: (message) => { return {stop: () => {}}},
+    },
     
-    // Use this function to execute some commands on the remote server
-    execRemote: [Function: execRemote] 
+    // Remote server methods
+    remote: {
+        // Excute command on the remote server
+        exec: (command, done, showLog) => {},
+        
+        // Upload local src file to target on the remote server
+        upload: (src, target, done) => {},
+        
+        // Create a symbolic link on the remote server
+        createSymboliclink: (target, link, done) => {},
+        
+        // Chmod path on the remote server
+        chmod: (path, mode, done) => {},
+        
+        // Create folder on the remote server
+        createFolder: (path, done) => {},
+    }
 }
 ```
 
 ##### Example with onXXXDeploy
 *onBeforeDeploy, onBeforeLink, onAfterDeploy options.*
 
-You have to call ``callback`` function to continue deployment process.
+You have to call ``done`` function to continue deployment process.
 
 ```js
-onAfterDeploy: (deployer, callback) => {
-    const command = 'pwd';
-    const showLog = false;
-    deployer.execRemote(command, showLog, callback);
+onAfterDeploy: (context, done) => {
+    context.logger.subhead('Do something');
+    const spinner = context.logger.startSpinner('Doing something');
+    const command = 'ls -la';
+    const showLog = true;
+    
+    deployer.remote.exec(
+        command,
+        () => {
+            spinner.stop();
+            done();
+        },
+        showLog
+    );
 }
 ```
 
@@ -261,7 +342,8 @@ onAfterDeployExecute: [
 **Or** with a function :
 
 ```js
-onAfterDeployExecute: (deployer) => {
+onAfterDeployExecute: (context) => {
+    context.logger.subhead('Doing something');
     return [
         'do something on the remote server',
         'and another thing'
@@ -269,40 +351,40 @@ onAfterDeployExecute: (deployer) => {
 }
 ```
 
-#### onBeforeDeploy
-Function called before deployment. Call `callback` to continue;
+#### options.onBeforeDeploy
+Function called before deployment. Call `done` to continue;
 
-Type: function(deployer, callback)
+Type: function(context, done)
 
 
-#### onBeforeDeployExecute
+#### options.onBeforeDeployExecute
 Array (or function returning array) of commands to execute on the remote server.
 
-Type: function(deployer) | []
+Type: function(context) | []
 
 
-#### onBeforeLink
-Function called before symlink creation. Call `callback` to continue;
+#### options.onBeforeLink
+Function called before symlink creation. Call `done` to continue;
 
-Type: function(deployer, callback)
+Type: function(context, done)
 
 
-#### onBeforeLinkExecute
+#### options.onBeforeLinkExecute
 Array (or function returning array) of commands to execute on the remote server.
 
-Type: function(deployer) | []
+Type: function(context) | []
 
 
-#### onAfterDeploy
-Function called after deployment. Call `callback` to continue;
+#### options.onAfterDeploy
+Function called after deployment. Call `done` to continue;
 
-Type: function(deployer, callback)
+Type: function(context, done)
 
 
-#### onAfterDeployExecute
+#### options.onAfterDeployExecute
 Array (or function returning array) of commands to execute on the remote server.
 
-Type: function(deployer) | []
+Type: function(context) | []
 
 
 ## Known issues

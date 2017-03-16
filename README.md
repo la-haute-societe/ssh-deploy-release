@@ -414,15 +414,15 @@ See this issue : https://github.com/mscdex/ssh2/issues/77
 ## Contributing
 
 ```
-# Build
+# Build (with Babel)
 npm run build
 
-# Build + watch
+# Build + watch (with Babel)
 npm run build -- --watch
 
-# Launch tests
+# Launch tests (Mocha + SinonJS)
 npm test
 
-# Launch tests + watch
+# Launch tests + watch (Mocha + SinonJS)
 npm test -- --watch
 ```

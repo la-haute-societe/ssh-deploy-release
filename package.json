@@ -1,5 +1,5 @@
 {
-  "version": "2.0.8",
+  "version": "2.0.9",
   "name": "ssh-deploy-release",
   "description": "Deploy release on remote server over ssh.",
   "author": "La Haute Société (http://www.lahautesociete.com)",
@@ -14,7 +14,6 @@
   "dependencies": {
     "archiver": "^1.1.0",
     "async": "^2.1.4",
-    "babel-cli": "^6.24.0",
     "chai": "^3.5.0",
     "chalk": "^1.1.3",
     "extend": "^3.0.0",
@@ -29,6 +28,7 @@
     "babel": "^6.23.0",
     "babel-preset-es2015": "^6.24.0",
     "babel-register": "^6.24.0",
+    "babel-cli": "^6.24.0",
     "jsdom": "^9.12.0",
     "jsdom-global": "^2.1.1",
     "mocha": "^3.2.0",

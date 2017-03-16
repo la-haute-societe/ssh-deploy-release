@@ -95,7 +95,7 @@ Default : ``false``
 #### options.port
 Port used to connect to the remote server.
 
-Default : 22
+Default : ``22``
 
 #### options.host
 Remote server hostname.
@@ -109,63 +109,63 @@ Password used to connect to the remote server.
 #### options.privateKeyFile
 For an encrypted private key, this is the passphrase used to decrypt it.
 
-Default: (null)
+Default: ``null``
 
 
 #### options.passphrase
 
-Default: null
+Default: ``null``
 
 #### options.mode
-'archive' : Deploy an archive and decompress it on the remote server.
+``archive`` : Deploy an archive and decompress it on the remote server.
 
-'synchronize' : Use *rsync*. Files are synchronized in the `options.synchronized` folder on the remote server.
+``synchronize`` : Use *rsync*. Files are synchronized in the `options.synchronized` folder on the remote server.
 
-Default : 'archive'
+Default : ``archive``
 
 #### options.archiveType
-'zip' : Use *zip* compression (``unzip`` command on remote)
+``zip`` : Use *zip* compression (``unzip`` command on remote)
 
-'tar' : Use *tar gz* compression (``tar`` command on remote)
+``tar`` : Use *tar gz* compression (``tar`` command on remote)
 
-Default : 'tar'
+Default : ``tar``
 
 #### options.archiveName
 Name of the archive.
 
-Default : 'release.tar.gz'
+Default : ``release.tar.gz``
 
 
 #### options.deleteLocalArchiveAfterDeployment
 Delete the local archive after the deployment. 
 
-Default : true
+Default : ``true``
 
 #### options.readyTimeout
 SCP connection timeout duration.
 
-Default : 20000
+Default : ``20000``
 
 ### Path
 #### options.currentReleaseLink
 Name of the current release symbolic link. Relative to `deployPath`.
 
-Defaut : 'www'
+Defaut : ``www``
 
 #### options.sharedFolder
 Name of the folder containing shared folders. Relative to `deployPath`.
 
-Default : 'shared'
+Default : ``shared``
 
 #### options.releasesFolder
 Name of the folder containing releases. Relative to `deployPath`.
 
-Default : 'releases'
+Default : ``releases``
 
 #### options.localPath
 Name of the local folder to deploy.
 
-Default : 'www'
+Default : ``www``
 
 #### options.deployPath
 Absolute path on the remote server where releases will be deployed.
@@ -175,12 +175,12 @@ Do not specify *currentReleaseLink* (or *www* folder) in this path.
 Name of the remote folder where *rsync* synchronize release.
 Used when `mode` is 'synchronize'.
 
-Default : 'www'
+Default : ``www``
 
 #### options.rsyncOptions
 Additional options for rsync process. 
 
-Default : ''
+Default : ``'''``
 
 ```js
 rsyncOptions : '--exclude-from="exclude.txt" --delete-excluded'
@@ -193,7 +193,7 @@ rsyncOptions : '--exclude-from="exclude.txt" --delete-excluded'
 #### options.releasesToKeep
 Number of releases to keep on the remote server.
 
-Default : 3
+Default : ``3``
 
 #### options.tag
 Name of the release. Must be different for each release.
@@ -205,7 +205,7 @@ List of paths (*glob* format) to **not** deploy. Paths must be relative to `loca
 
 Not compatible with `mode: 'synchronize'`, use `rsyncOptions` instead to exclude some files.
 
-Default : []
+Default : ``[]``
 
 #### options.share
 List of folders to "share" between releases. A symlink will be created for each item.  
@@ -224,22 +224,28 @@ Keys = Folder to share (relative to `sharedFolder`)
 
 Values = Symlink path  (relative to release folder)
 
+Default : ``{}``
+
 #### options.create
 List of folders to create on the remote server.
+
+Default : ``[]``
 
 
 #### options.makeWritable
 List of files to make writable on the remote server. (chmod ugo+w)
 
+Default : ``[]``
 
 #### options.makeExecutable
 List of files to make executable on the remote server. (chmod ugo+x)
 
+Default : ``[]``
 
 #### options.allowRemove
 If true, the remote release folder can be deleted with `--remove` cli parameter.
 
-Default: false
+Default: ``false``
 
 
 
@@ -354,37 +360,38 @@ onAfterDeployExecute: (context) => {
 #### options.onBeforeDeploy
 Function called before deployment. Call `done` to continue;
 
-Type: function(context, done)
+Type: ``function(context, done)``
 
 
 #### options.onBeforeDeployExecute
 Array (or function returning array) of commands to execute on the remote server.
 
-Type: function(context) | []
+Type: ``function(context) | []``
 
 
 #### options.onBeforeLink
 Function called before symlink creation. Call `done` to continue;
 
-Type: function(context, done)
+Type: ``function(context, done)``
 
 
 #### options.onBeforeLinkExecute
 Array (or function returning array) of commands to execute on the remote server.
 
-Type: function(context) | []
+Type: ``function(context) | []``
 
 
 #### options.onAfterDeploy
 Function called after deployment. Call `done` to continue;
 
-Type: function(context, done)
+Type: ``function(context, done)``
 
 
 #### options.onAfterDeployExecute
 Array (or function returning array) of commands to execute on the remote server.
 
-Type: function(context) | []
+Type: ``function(context) | []``
+
 
 
 ## Known issues

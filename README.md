@@ -79,6 +79,12 @@ deployer.removeRelease(() => {
 });
 ```
 
+### Use with Grunt
+
+Use [grunt-ssh-deploy-release](https://github.com/la-haute-societe/grunt-ssh-deploy-release).
+
+
+
 ## Options
 
 ssh-deploy-release uses ssh2 to handle SSH connections.  

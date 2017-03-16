@@ -243,7 +243,7 @@ List of files to make executable on the remote server. (chmod ugo+x)
 Default : ``[]``
 
 #### options.allowRemove
-If true, the remote release folder can be deleted with `--remove` cli parameter.
+If true, the remote release folder can be deleted with ``removeRelease`` method.
 
 Default: ``false``
 

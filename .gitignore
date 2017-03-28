@@ -4,3 +4,4 @@
 /release.tar.gz
 /release.zip
 npm-debug.log
+/tests/e2e/server-config.js

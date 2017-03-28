@@ -1,15 +1,15 @@
 'use strict';
 
 const Deployer = require('../../dist/ssh-deploy-release');
+const server = require('./server-config');
 
 
 const options = {
-    debug: true,
     localPath: 'src',
-    host: 'my.server.com',
-    username: 'username',
-    password: 'password',
-    deployPath: '/var/deploy/path',
+    host: server.host,
+    username: server.username,
+    password: server.password,
+    deployPath: '/var/www/vhosts/test/httpdocs',
 
     share: {
         'target-folder': 'link-name'
@@ -27,6 +27,7 @@ const options = {
         ]
     }
 };
+
 
 const deployer = new Deployer(options);
 deployer.deployRelease();

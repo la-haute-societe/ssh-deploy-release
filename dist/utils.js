@@ -31,9 +31,7 @@ module.exports = {
             }
             // This reduces the realpath
             if (arr[k] === '..') {
-                /* But only if there more than 3 parts in the path-array.
-                 * The first three parts are for the uri */
-                if (path.length > 3) {
+                if (path.length > 2) {
                     path.pop();
                 }
             } else {

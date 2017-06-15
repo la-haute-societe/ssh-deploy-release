@@ -11,41 +11,42 @@ module.exports = {
     },
 
 
-
     /**
      * Realpath
      * @param path
      * @returns {string}
      */
-    realpath(path) {
+    realpath: function realpath(path) {
 
         // Explode the given path into it's parts
-        let arr = path.split('/') // The path is an array now
+        var arr = path.split('/'); // The path is an array now
 
-        path = [] // Foreach part make a check
-        for (let k in arr) { // This is'nt really interesting
+        path = []; // Foreach part make a check
+        for (var k in arr) {
+            // This is'nt really interesting
             if (arr[k] === '.') {
-                continue
+                continue;
             }
             // This reduces the realpath
             if (arr[k] === '..') {
                 /* But only if there more than 3 parts in the path-array.
                  * The first three parts are for the uri */
-                if (path.length > 3) {
-                    path.pop()
-                }
+
+                path.pop();
+
             } else {
                 // This adds parts to the realpath
                 // But only if the part is not empty or the uri
                 // (the first three parts ar needed) was not
                 // saved
-                if ((path.length < 2) || (arr[k] !== '')) {
-                    path.push(arr[k])
+                if (path.length < 2 || arr[k] !== '') {
+                    path.push(arr[k]);
                 }
             }
         }
 
+
         // Returns the absloute path as a string
-        return path.join('/')
+        return path.join('/');
     }
 };

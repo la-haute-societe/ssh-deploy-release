@@ -16,7 +16,7 @@ module.exports = {
      * @param path
      * @returns {string}
      */
-    realpath: function realpath(path) {
+    realpath(path) {
 
         // Explode the given path into it's parts
         var arr = path.split('/'); // The path is an array now

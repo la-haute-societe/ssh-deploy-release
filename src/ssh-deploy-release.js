@@ -32,8 +32,11 @@ module.exports = class {
             release: this.release,
             logger: this.logger,
             remote: {
-                exec: (cmd, done, showLog) => {
-                    this.remote.exec(cmd, done, showLog);
+                exec: (command, done, showLog) => {
+                    this.remote.exec(command, done, showLog);
+                },
+                execMultiple: (commands, done, showLog) => {
+                    this.remote.execMultiple(commands, done, showLog);
                 },
                 upload: (src, target, done) => {
                     this.remote.upload(src, target, done);

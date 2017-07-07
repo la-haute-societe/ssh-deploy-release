@@ -122,6 +122,25 @@ module.exports = function () {
         }
 
         /**
+         * Exec multiple commands on remote using SSH connection
+         * @param commands
+         * @param done
+         * @param log Log result
+         */
+
+    }, {
+        key: 'execMultiple',
+        value: function execMultiple(commands, done, log) {
+            var _this2 = this;
+
+            async.eachSeries(commands, function (command, itemCallback) {
+                _this2.exec(command, function () {
+                    itemCallback();
+                }, log);
+            }, done);
+        }
+
+        /**
          * Upload file on remote
          * @param src
          * @param target
@@ -146,7 +165,7 @@ module.exports = function () {
     }, {
         key: 'synchronize',
         value: function synchronize(src, target, synchronizedFolder, done) {
-            var _this2 = this;
+            var _this3 = this;
 
             var source = src + '/';
             var fullTarget = this.options.username + '@' + this.options.host + ':' + synchronizedFolder;
@@ -171,19 +190,19 @@ module.exports = function () {
             exec(synchronizeCommand, function (error, stdout, stderr) {
 
                 if (error) {
-                    _this2.logger.fatal(error);
+                    _this3.logger.fatal(error);
                     return;
                 }
 
                 if (stdout) {
-                    _this2.logger.log(stdout);
+                    _this3.logger.log(stdout);
                 }
 
                 if (stderr) {
-                    _this2.logger.log(stderr);
+                    _this3.logger.log(stderr);
                 }
 
-                _this2.synchronizeRemote(_this2.options.deployPath + '/' + _this2.options.synchronizedFolder, target, done);
+                _this3.synchronizeRemote(_this3.options.deployPath + '/' + _this3.options.synchronizedFolder, target, done);
             });
         }
 
@@ -216,9 +235,9 @@ module.exports = function () {
         value: function createSymboliclink(target, link, done) {
             var commands = ['mkdir -p ' + link, // Create the parent of the symlink target
             'rm -rf ' + link, 'mkdir -p ' + utils.realpath(link + '/../' + target), // Create the symlink target
-            'ln -nfs ' + target + ' ' + link].join('\n');
+            'ln -nfs ' + target + ' ' + link];
 
-            this.exec(commands, done);
+            this.execMultiple(commands, done);
         }
 
         /**
@@ -247,8 +266,8 @@ module.exports = function () {
     }, {
         key: 'createFolder',
         value: function createFolder(path, done) {
-            var command = ['mkdir -p ' + path, 'chmod ugo+w ' + path].join('\n');
-            this.exec(command, done);
+            var commands = ['mkdir -p ' + path, 'chmod ugo+w ' + path];
+            this.execMultiple(commands, done);
         }
 
         /**
@@ -261,9 +280,9 @@ module.exports = function () {
     }, {
         key: 'removeOldFolders',
         value: function removeOldFolders(folder, numberToKeep, done) {
-            var command = ["cd " + folder, "rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"].join('\n');
+            var commands = ["cd " + folder, "rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"];
 
-            this.exec(command, function () {
+            this.execMultiple(commands, function () {
                 done();
             });
         }

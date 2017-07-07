@@ -94,7 +94,7 @@ module.exports = class {
             }
 
             stream.on('data', (data, extended) => {
-                if(log) {
+                if (log) {
                     this.logger.log((extended === 'stderr' ? 'STDERR: ' : 'STDOUT: ') + data);
                     return;
                 }
@@ -107,6 +107,22 @@ module.exports = class {
                 done();
             });
         });
+    }
+
+
+    /**
+     * Exec multiple commands on remote using SSH connection
+     * @param commands
+     * @param done
+     * @param log Log result
+     */
+    execMultiple(commands, done, log) {
+
+        async.eachSeries(commands, (command, itemCallback) => {
+            this.exec(command, () => {
+                itemCallback();
+            }, log);
+        }, done);
     }
 
 
@@ -201,9 +217,9 @@ module.exports = class {
             'rm -rf ' + link,
             'mkdir -p ' + utils.realpath(link + '/../' + target), // Create the symlink target
             'ln -nfs ' + target + ' ' + link
-        ].join('\n');
+        ];
 
-        this.exec(commands, done);
+        this.execMultiple(commands, done);
     }
 
     /**
@@ -226,11 +242,11 @@ module.exports = class {
      * @param done
      */
     createFolder(path, done) {
-        const command = [
+        const commands = [
             'mkdir -p ' + path,
             'chmod ugo+w ' + path
-        ].join('\n');
-        this.exec(command, done);
+        ];
+        this.execMultiple(commands, done);
     }
 
 
@@ -241,13 +257,13 @@ module.exports = class {
      * @param done
      */
     removeOldFolders(folder, numberToKeep, done) {
-        const command = [
+        const commands = [
             "cd " + folder,
             "rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"
-        ].join('\n');
+        ];
 
 
-        this.exec(command, () => {
+        this.execMultiple(commands, () => {
             done();
         });
     }

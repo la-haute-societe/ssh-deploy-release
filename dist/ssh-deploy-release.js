@@ -39,8 +39,11 @@ module.exports = function () {
             release: this.release,
             logger: this.logger,
             remote: {
-                exec: function exec(cmd, done, showLog) {
-                    _this.remote.exec(cmd, done, showLog);
+                exec: function exec(command, done, showLog) {
+                    _this.remote.exec(command, done, showLog);
+                },
+                execMultiple: function execMultiple(commands, done, showLog) {
+                    _this.remote.execMultiple(commands, done, showLog);
                 },
                 upload: function upload(src, target, done) {
                     _this.remote.upload(src, target, done);

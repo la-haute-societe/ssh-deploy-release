@@ -18,8 +18,12 @@ module.exports = {
      * @param path
      * @returns {string}
      */
+    /**
+     * Realpath
+     * @param path
+     * @returns {string}
+     */
     realpath: function realpath(path) {
-
         // Explode the given path into it's parts
         var arr = path.split('/'); // The path is an array now
 
@@ -31,9 +35,7 @@ module.exports = {
             }
             // This reduces the realpath
             if (arr[k] === '..') {
-                if (path.length > 2) {
-                    path.pop();
-                }
+                path.pop();
             } else {
                 // This adds parts to the realpath
                 // But only if the part is not empty or the uri

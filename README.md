@@ -303,6 +303,9 @@ The following object is passed to ``onXXXDeploy`` functions :
         // Excute command on the remote server
         exec: (command, done, showLog) => {},
         
+        // Excute multiple commands (array) on the remote server
+        execMultiple: (commands, done, showLog) => {},
+        
         // Upload local src file to target on the remote server
         upload: (src, target, done) => {},
         

@@ -549,7 +549,7 @@ module.exports = class {
         }
 
         logger.subhead('Delete local archive');
-        fs.unlink(this.options.archiveName);
+        fs.unlinkSync(this.options.archiveName);
         logger.ok('Done');
         done();
     }

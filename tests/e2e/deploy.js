@@ -10,6 +10,9 @@ const options = {
     username: server.username,
     password: server.password,
     deployPath: '/var/www/vhosts/test/httpdocs',
+    // mode:'archive',
+    // archiveType: 'zip',
+    debug: true,
 
     share: {
         'target-folder': 'link-name'

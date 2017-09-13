@@ -291,9 +291,10 @@ module.exports = function () {
             this.logger.subhead('Decompress archive on remote');
             var spinner = this.logger.startSpinner('Decompressing');
 
+            var archivePath = path.posix.join(this.release.path, this.options.archiveName);
             var untarMap = {
-                'zip': "unzip -q " + this.options.archiveName,
-                'tar': "tar -xvf " + this.options.archiveName
+                'zip': "unzip -q " + archivePath + " -d " + this.release.path + "/",
+                'tar': "tar -xvf " + archivePath + " -C " + this.release.path + "/"
             };
 
             // Check archiveType is supported
@@ -301,7 +302,7 @@ module.exports = function () {
                 logger.fatal(this.options.archiveType + ' not supported.');
             }
 
-            var command = ["cd " + this.release.path, untarMap[this.options.archiveType], "rm " + path.posix.join(this.release.path, this.options.archiveName)].join('\n');
+            var command = [untarMap[this.options.archiveType], "rm " + archivePath].join('\n');
 
             this.remote.exec(command, function () {
                 spinner.stop();

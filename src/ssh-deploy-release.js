@@ -119,9 +119,6 @@ module.exports = class {
     }
 
 
-
-
-
     // =======================================================================================
 
     /**
@@ -189,7 +186,7 @@ module.exports = class {
                 this.logger.error('Connection error', command, error);
 
                 // Clean up remote release + close connection
-            //    this.removeReleaseTask(this.closeConnectionTask(done));
+                //    this.removeReleaseTask(this.closeConnectionTask(done));
             }
         );
 
@@ -297,9 +294,10 @@ module.exports = class {
         this.logger.subhead('Decompress archive on remote');
         let spinner = this.logger.startSpinner('Decompressing');
 
-        const untarMap = {
-            'zip': "unzip -q " + this.options.archiveName,
-            'tar': "tar -xvf " + this.options.archiveName,
+        const archivePath = path.posix.join(this.release.path, this.options.archiveName);
+        const untarMap    = {
+            'zip': "unzip -q " + archivePath + " -d " + this.release.path + "/",
+            'tar': "tar -xvf " + archivePath + " -C " + this.release.path + "/",
         };
 
         // Check archiveType is supported
@@ -308,9 +306,8 @@ module.exports = class {
         }
 
         const command = [
-            "cd " + this.release.path,
             untarMap[this.options.archiveType],
-            "rm " + path.posix.join(this.release.path, this.options.archiveName),
+            "rm " + archivePath,
         ].join('\n');
 
         this.remote.exec(command, () => {

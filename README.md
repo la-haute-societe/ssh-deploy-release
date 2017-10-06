@@ -207,9 +207,16 @@ Name of the release. Must be different for each release.
 Default : Use current timestamp.
 
 #### options.exclude
-List of paths (*glob* format) to **not** deploy. Paths must be relative to `localPath`.
+List of paths (*glob* format) to **not** deploy.
+
+Paths must be relative to `localPath`.
 
 Not compatible with `mode: 'synchronize'`, use `rsyncOptions` instead to exclude some files.
+
+In order to exclude a folder, you have to explicitly ignore all its descending files using ```**```.
+For example : ``['my-folder/**']``
+
+> Read *glob* documentation for more informations : https://github.com/isaacs/node-glob
 
 Default : ``[]``
 

@@ -356,8 +356,8 @@ describe('Deploy - Remote', function () {
         const deployer = new Deployer();
         deployer.logger.setEnabled(false);
 
-        assert.throw(
-            () => {
+            assert.throw(
+                () => {
                 deployer.connectToRemoteTask(() => {
                     assert(spy.called);
                 })

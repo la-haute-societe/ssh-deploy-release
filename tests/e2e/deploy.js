@@ -5,7 +5,7 @@ const server = require('./server-config');
 
 
 const options = {
-    localPath: 'src',
+    localPath: 'tests/e2e/folder-to-deploy',
     host: server.host,
     username: server.username,
     password: server.password,
@@ -28,7 +28,8 @@ const options = {
         return [
             'ls -la ' + context.options.deployPath
         ]
-    }
+    },
+    exclude: ['exclude-this/**']
 };
 
 

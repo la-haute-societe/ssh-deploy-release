@@ -180,7 +180,7 @@ module.exports = function () {
 
             // Use privateKey
             else if (this.options.privateKeyFile != null) {
-                    logger.fatal('PrivateKey not compatible with synchronize mode.');
+                    _this3.logger.fatal('PrivateKey not compatible with synchronize mode.');
                 }
 
             // Concat

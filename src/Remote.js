@@ -159,7 +159,7 @@ module.exports = class {
 
         // Use privateKey
         else if (this.options.privateKeyFile != null) {
-            logger.fatal('PrivateKey not compatible with synchronize mode.');
+            this.logger.fatal('PrivateKey not compatible with synchronize mode.');
         }
 
         // Concat

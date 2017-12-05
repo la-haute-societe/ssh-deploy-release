@@ -239,8 +239,7 @@ module.exports = function () {
                 spinner.stop();
 
                 if (error) {
-                    logger.error(error);
-                    return;
+                    logger.fatal(error);
                 }
 
                 _this4.logger.ok('Done');

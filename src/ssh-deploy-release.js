@@ -245,8 +245,7 @@ module.exports = class {
                 spinner.stop();
 
                 if (error) {
-                    logger.error(error);
-                    return;
+                    logger.fatal(error);
                 }
 
                 this.logger.ok('Done');

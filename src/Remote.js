@@ -258,8 +258,7 @@ module.exports = class {
      */
     removeOldFolders(folder, numberToKeep, done) {
         const commands = [
-            "cd " + folder,
-            "rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"
+            "cd " + folder + " && rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"
         ];
 
 

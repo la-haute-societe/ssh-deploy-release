@@ -280,7 +280,7 @@ module.exports = function () {
     }, {
         key: 'removeOldFolders',
         value: function removeOldFolders(folder, numberToKeep, done) {
-            var commands = ["cd " + folder, "rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"];
+            var commands = ["cd " + folder + " && rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"];
 
             this.execMultiple(commands, function () {
                 done();

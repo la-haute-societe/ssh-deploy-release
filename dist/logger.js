@@ -29,7 +29,7 @@ function setDebug(enableDebug) {
  */
 function logFatal(message) {
     console.log(os.EOL + chalk.red.bold('Fatal error : ' + message));
-    process.exit();
+    process.exit(1);
 }
 
 /**

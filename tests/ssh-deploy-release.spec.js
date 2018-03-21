@@ -589,7 +589,7 @@ describe('Delete local archive', function() {
         deployer.logger.setEnabled(false);
 
         const fs = require('fs');
-        const unlinkStub = sinon.stub(fs, 'unlink');
+        const unlinkStub = sinon.stub(fs, 'unlinkSync');
 
         deployer.deleteLocalArchiveTask(() => {
             assert(unlinkStub.called, 'Should call fs.unlink method');
@@ -605,7 +605,7 @@ describe('Delete local archive', function() {
         deployer.logger.setEnabled(false);
 
         const fs = require('fs');
-        const unlinkStub = sinon.stub(fs, 'unlink');
+        const unlinkStub = sinon.stub(fs, 'unlinkSync');
 
         deployer.deleteLocalArchiveTask(() => {
             assert(unlinkStub.notCalled, 'Should call fs.unlink method');
@@ -622,7 +622,7 @@ describe('Delete local archive', function() {
         deployer.logger.setEnabled(false);
 
         const fs = require('fs');
-        const unlinkStub = sinon.stub(fs, 'unlink');
+        const unlinkStub = sinon.stub(fs, 'unlinkSync');
 
         deployer.deleteLocalArchiveTask(() => {
             assert(unlinkStub.notCalled, 'Should call fs.unlink method');

@@ -99,19 +99,22 @@ module.exports = function () {
             var _this = this;
 
             this.connection.exec(command, function (error, stream) {
-
                 if (error) {
                     _this.onError(command, error);
                     return;
                 }
 
-                stream.on('data', function (data, extended) {
+                stream.stderr.on('data', function (data) {
+                    _this.logger.error('STDERR: ' + data);
+                });
+
+                stream.on('data', function (data) {
                     if (log) {
-                        _this.logger.log((extended === 'stderr' ? 'STDERR: ' : 'STDOUT: ') + data);
+                        _this.logger.log('STDOUT: ' + data);
                         return;
                     }
 
-                    _this.logger.debug((extended === 'stderr' ? 'STDERR: ' : 'STDOUT: ') + data);
+                    _this.logger.debug('STDOUT: ' + data);
                 });
 
                 stream.on('end', function () {

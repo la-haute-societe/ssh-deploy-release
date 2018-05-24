@@ -87,23 +87,26 @@ module.exports = class {
      */
     exec(command, done, log) {
         this.connection.exec(command, (error, stream) => {
-
             if (error) {
                 this.onError(command, error);
                 return;
             }
 
-            stream.on('data', (data, extended) => {
+            stream.stderr.on('data', data => {
+                this.logger.error(`STDERR: ${data}`);
+            });
+
+            stream.on('data', data => {
                 if (log) {
-                    this.logger.log((extended === 'stderr' ? 'STDERR: ' : 'STDOUT: ') + data);
+                    this.logger.log(`STDOUT: ${data}`);
                     return;
                 }
 
-                this.logger.debug((extended === 'stderr' ? 'STDERR: ' : 'STDOUT: ') + data);
+                this.logger.debug(`STDOUT: ${data}`);
             });
 
             stream.on('end', () => {
-                this.logger.debug('Remote command : ' + command);
+                this.logger.debug(`Remote command : ${command}`);
                 done();
             });
         });

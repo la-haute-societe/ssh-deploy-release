@@ -30,35 +30,35 @@ module.exports = class {
         this.context = {
             options: this.options,
             release: this.release,
-            logger: this.logger,
-            remote: {
-                exec: (command, done, showLog) => {
+            logger:  this.logger,
+            remote:  {
+                exec:               (command, done, showLog) => {
                     this.remote.exec(command, done, showLog);
                 },
-                execMultiple: (commands, done, showLog) => {
+                execMultiple:       (commands, done, showLog) => {
                     this.remote.execMultiple(commands, done, showLog);
                 },
-                upload: (src, target, done) => {
+                upload:             (src, target, done) => {
                     this.remote.upload(src, target, done);
                 },
                 createSymboliclink: (target, link, done) => {
                     this.remote.createSymboliclink(target, link, done);
                 },
-                chmod: (path, mode, done) => {
+                chmod:              (path, mode, done) => {
                     this.remote.chmod(path, mode, done);
                 },
-                createFolder: (path, done) => {
+                createFolder:       (path, done) => {
                     this.remote.createFolder(path, done);
                 },
             },
 
             // 1.x.x compatibility
             // @deprecated
-            releaseTag: this.release.tag,
+            releaseTag:  this.release.tag,
             // @deprecated
             releaseName: this.release.name,
             // @deprecated
-            execRemote: (cmd, showLog, done) => {
+            execRemote:  (cmd, showLog, done) => {
                 this.remote.exec(cmd, done, showLog);
             },
         };
@@ -304,12 +304,14 @@ module.exports = class {
             logger.fatal(this.options.archiveType + ' not supported.');
         }
 
-        const command = [
+        const commands = [
             untarMap[this.options.archiveType],
             "rm " + archivePath,
-        ].join('\n');
+        ];
 
-        this.remote.exec(command, () => {
+        async.eachSeries(commands, (command, itemDone) => {
+            this.remote.exec(command, itemDone);
+        }, () => {
             spinner.stop();
             this.logger.ok('Done');
             done();

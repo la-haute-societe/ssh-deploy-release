@@ -9,7 +9,7 @@ const options = {
     host: server.host,
     username: server.username,
     password: server.password,
-    deployPath: '/var/www/vhosts/test/httpdocs',
+    deployPath: '/storage/av05842/www',
     // mode:'archive',
     // archiveType: 'zip',
     debug: true,

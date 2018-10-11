@@ -2,6 +2,7 @@ const Connection = require('ssh2');
 const fs         = require('fs');
 const exec       = require('child_process').exec;
 const async      = require('async');
+const extend     = require('extend');
 
 const utils = require('./utils');
 
@@ -45,7 +46,7 @@ module.exports = class {
         // Connect
         this.connection.connect(this.options);
 
-        const scpOptions = {
+        this.scpOptions = {
             port: this.options.port,
             host: this.options.host,
             username: this.options.username,
@@ -54,20 +55,20 @@ module.exports = class {
 
         // Private key authentication
         if (this.options.privateKey) {
-            scpOptions.privateKey = this.options.privateKey;
+            this.scpOptions.privateKey = this.options.privateKey;
             if (this.options.passphrase) {
-                scpOptions.passphrase = this.options.passphrase;
+                this.scpOptions.passphrase = this.options.passphrase;
             }
         }
 
         // Password authentication
         else if (this.options.password) {
-            scpOptions.password = this.options.password;
+            this.scpOptions.password = this.options.password;
         }
 
         // Agent authentication
         else if (this.options.agent) {
-            scpOptions.agent = this.options.agent;
+            this.scpOptions.agent = this.options.agent;
         }
 
         // No authentication
@@ -75,7 +76,7 @@ module.exports = class {
             throw new Error('Agent, password or private key required for secure copy.');
         }
 
-        this.client.defaults(scpOptions);
+        this.client.defaults(this.scpOptions);
     }
 
 
@@ -136,9 +137,14 @@ module.exports = class {
      * @param done
      */
     upload(src, target, done) {
-        this.client.scp(src, {
-            path: target
-        }, done);
+        this.client.scp(
+            src,
+            extend(
+                this.scpOptions,
+                {path: target}
+            ),
+            done
+        );
     }
 
     /**

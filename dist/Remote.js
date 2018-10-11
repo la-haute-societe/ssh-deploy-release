@@ -8,6 +8,7 @@ var Connection = require('ssh2');
 var fs = require('fs');
 var exec = require('child_process').exec;
 var async = require('async');
+var extend = require('extend');
 
 var utils = require('./utils');
 
@@ -53,7 +54,7 @@ module.exports = function () {
             // Connect
             this.connection.connect(this.options);
 
-            var scpOptions = {
+            this.scpOptions = {
                 port: this.options.port,
                 host: this.options.host,
                 username: this.options.username,
@@ -62,20 +63,20 @@ module.exports = function () {
 
             // Private key authentication
             if (this.options.privateKey) {
-                scpOptions.privateKey = this.options.privateKey;
+                this.scpOptions.privateKey = this.options.privateKey;
                 if (this.options.passphrase) {
-                    scpOptions.passphrase = this.options.passphrase;
+                    this.scpOptions.passphrase = this.options.passphrase;
                 }
             }
 
             // Password authentication
             else if (this.options.password) {
-                    scpOptions.password = this.options.password;
+                    this.scpOptions.password = this.options.password;
                 }
 
                 // Agent authentication
                 else if (this.options.agent) {
-                        scpOptions.agent = this.options.agent;
+                        this.scpOptions.agent = this.options.agent;
                     }
 
                     // No authentication
@@ -83,7 +84,7 @@ module.exports = function () {
                             throw new Error('Agent, password or private key required for secure copy.');
                         }
 
-            this.client.defaults(scpOptions);
+            this.client.defaults(this.scpOptions);
         }
 
         /**
@@ -153,9 +154,7 @@ module.exports = function () {
     }, {
         key: 'upload',
         value: function upload(src, target, done) {
-            this.client.scp(src, {
-                path: target
-            }, done);
+            this.client.scp(src, extend(this.scpOptions, { path: target }), done);
         }
 
         /**

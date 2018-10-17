@@ -221,11 +221,13 @@ module.exports = class {
      * @param done
      */
     createSymboliclink(target, link, done) {
+        link = utils.realpath(link);
+        const symlinkTarget = utils.realpath(link + '/../' + target);
+
         const commands = [
-            'mkdir -p ' + link, // Create the parent of the symlink target
-            'rm -rf ' + link,
-            'mkdir -p ' + utils.realpath(link + '/../' + target), // Create the symlink target
-            'ln -nfs ' + target + ' ' + link
+            `mkdir -p \`dirname ${link}\``, // Create the parent of the symlink
+            `if test ! -e ${symlinkTarget}; then mkdir -p ${symlinkTarget}; fi`, // Create the symlink target, if it doesn't exist
+            `ln -nfs ${target} ${link}`
         ];
 
         this.execMultiple(commands, done);

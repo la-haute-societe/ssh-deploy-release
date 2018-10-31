@@ -301,11 +301,17 @@ module.exports = function () {
                 logger.fatal(this.options.archiveType + ' not supported.');
             }
 
-            var command = [untarMap[this.options.archiveType], "rm " + archivePath].join('\n');
-
-            this.remote.exec(command, function () {
+            var commands = [untarMap[this.options.archiveType], "rm " + archivePath];
+            async.eachSeries(commands, function (command, itemDone) {
+                console.log('EXEC' + command);
+                _this6.remote.exec(command, function () {
+                    console.log('callback called' + command);itemDone();
+                });
+            }, function () {
+                console.log('OK');
                 spinner.stop();
                 _this6.logger.ok('Done');
+                console.log('OK2');
                 done();
             });
         }

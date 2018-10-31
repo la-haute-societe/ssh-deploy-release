@@ -177,7 +177,7 @@ module.exports = function () {
 
             // Use password
             if (this.options.password != '') {
-                sshpass = '--rsh=\'sshpass -p "' + this.options.password + '" ssh -l ' + this.options.username + ' -o StrictHostKeyChecking=no\'';
+                sshpass = '--rsh=\'sshpass -p "' + this.options.password + '" ssh -l ' + this.options.username + ' -p ' + this.options.port + ' -o StrictHostKeyChecking=no\'';
             }
 
             // Use privateKey

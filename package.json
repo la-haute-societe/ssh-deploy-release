@@ -1,5 +1,5 @@
 {
-  "version": "2.2.0",
+  "version": "2.2.1",
   "name": "ssh-deploy-release",
   "description": "Deploy release on remote server over ssh.",
   "author": "La Haute Société (http://www.lahautesociete.com)",

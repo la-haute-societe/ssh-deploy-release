@@ -285,12 +285,12 @@ describe('Deploy - archive', function () {
 
         let stub = sinon.stub(deployer.remote, 'exec');
 
+        stub.onCall(0).callsArg(1);
+        stub.onCall(1).callsArg(1);
+
         deployer.decompressArchiveOnRemoteTask(() => {
-            assert(stub.called, 'Synchronize mode should decompress archive on remote');
             done();
         });
-
-        stub.callArg(1);
     });
 });
 

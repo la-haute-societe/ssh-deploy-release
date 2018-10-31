@@ -308,12 +308,14 @@ module.exports = class {
             untarMap[this.options.archiveType],
             "rm " + archivePath,
         ];
-
         async.eachSeries(commands, (command, itemDone) => {
-            this.remote.exec(command, itemDone);
+            console.log('EXEC'+command);
+            this.remote.exec(command, () => {console.log('callback called'+command); itemDone();});
         }, () => {
+            console.log('OK');
             spinner.stop();
             this.logger.ok('Done');
+            console.log('OK2');
             done();
         });
     }

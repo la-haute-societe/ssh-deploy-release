@@ -1,303 +1,284 @@
-'use strict';
+"use strict";
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const Connection = require('ssh2');
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+const fs = require('fs');
 
-var Connection = require('ssh2');
-var fs = require('fs');
-var exec = require('child_process').exec;
-var async = require('async');
-var extend = require('extend');
+const exec = require('child_process').exec;
 
-var utils = require('./utils');
+const async = require('async');
 
+const extend = require('extend');
+
+const path = require('path');
+
+const utils = require('./utils');
 /**
  * Remote
  * @type {{}}
  */
-module.exports = function () {
-    function _class(options, logger, onError) {
-        _classCallCheck(this, _class);
 
-        this.options = options;
-        this.logger = logger;
-        this.onError = onError;
 
-        this.client = require('scp2');
+module.exports = class {
+  constructor(options, logger, onError) {
+    this.options = options;
+    this.logger = logger;
+    this.onError = onError;
+    this.client = require('scp2');
 
-        if (options.privateKeyFile) {
-            options.privateKey = fs.readFileSync(options.privateKeyFile);
-        }
+    if (options.privateKeyFile) {
+      options.privateKey = fs.readFileSync(options.privateKeyFile);
     }
+  }
+  /**
+   * Initiate SSH and SCP connection
+   * @param onReady
+   * @param onError
+   * @param onClose
+   */
 
-    /**
-     * Initiate SSH and SCP connection
-     * @param onReady
-     * @param onError
-     * @param onClose
-     */
+
+  connect(onReady, onError, onClose) {
+    // Instanciate connection
+    this.connection = new Connection(); // Register events
+
+    this.connection.on('ready', onReady);
+    this.connection.on('error', onError);
+    this.connection.on('close', onClose); // Connect
+
+    this.connection.connect(this.options);
+    this.scpOptions = {
+      port: this.options.port,
+      host: this.options.host,
+      username: this.options.username,
+      readyTimeout: this.options.readyTimeout
+    }; // Private key authentication
+
+    if (this.options.privateKey) {
+      this.scpOptions.privateKey = this.options.privateKey;
+
+      if (this.options.passphrase) {
+        this.scpOptions.passphrase = this.options.passphrase;
+      }
+    } // Password authentication
+    else if (this.options.password) {
+        this.scpOptions.password = this.options.password;
+      } // Agent authentication
+      else if (this.options.agent) {
+          this.scpOptions.agent = this.options.agent;
+        } // No authentication
+        else {
+            throw new Error('Agent, password or private key required for secure copy.');
+          }
+
+    this.client.defaults(this.scpOptions);
+  }
+  /**
+   * Exec command on remote using SSH connection
+   * @param command
+   * @param {Function} done A NodeJS error first-callback. The second argument is a string representing the command output.
+   * @param log Log result
+   */
 
 
-    _createClass(_class, [{
-        key: 'connect',
-        value: function connect(onReady, onError, onClose) {
+  exec(command, done, log) {
+    this.connection.exec(command, (error, stream) => {
+      const stdout = [];
+      const stderr = [];
 
-            // Instanciate connection
-            this.connection = new Connection();
+      if (error) {
+        this.onError(command, error); // TODO: Envisager de passer l'erreur à done: done(error)
 
-            // Register events
-            this.connection.on('ready', onReady);
-            this.connection.on('error', onError);
-            this.connection.on('close', onClose);
+        return;
+      }
 
-            // Connect
-            this.connection.connect(this.options);
+      stream.stderr.on('data', data => {
+        stderr.push(data.toString());
+        this.logger.error(`STDERR: ${data}`);
+      });
+      stream.on('data', data => {
+        stdout.push(data.toString());
 
-            this.scpOptions = {
-                port: this.options.port,
-                host: this.options.host,
-                username: this.options.username,
-                readyTimeout: this.options.readyTimeout
-            };
-
-            // Private key authentication
-            if (this.options.privateKey) {
-                this.scpOptions.privateKey = this.options.privateKey;
-                if (this.options.passphrase) {
-                    this.scpOptions.passphrase = this.options.passphrase;
-                }
-            }
-
-            // Password authentication
-            else if (this.options.password) {
-                    this.scpOptions.password = this.options.password;
-                }
-
-                // Agent authentication
-                else if (this.options.agent) {
-                        this.scpOptions.agent = this.options.agent;
-                    }
-
-                    // No authentication
-                    else {
-                            throw new Error('Agent, password or private key required for secure copy.');
-                        }
-
-            this.client.defaults(this.scpOptions);
+        if (log) {
+          this.logger.log(`STDOUT: ${data}`);
+          return;
         }
 
-        /**
-         * Exec command on remote using SSH connection
-         * @param command
-         * @param done
-         * @param log Log result
-         */
+        this.logger.debug(`STDOUT: ${data}`);
+      });
+      stream.on('close', (exitCode, exitSignal) => {
+        this.logger.debug(`Remote command : ${command}`);
+        done(null, exitCode, exitSignal, stdout, stderr);
+      });
+    });
+  }
+  /**
+   * Exec multiple commands on remote using SSH connection
+   * @param commands
+   * @param done
+   * @param log Log result
+   */
 
-    }, {
-        key: 'exec',
-        value: function exec(command, done, log) {
-            var _this = this;
 
-            this.connection.exec(command, function (error, stream) {
-                if (error) {
-                    _this.onError(command, error);
-                    return;
-                }
+  execMultiple(commands, done, log) {
+    async.eachSeries(commands, (command, itemCallback) => {
+      this.exec(command, () => {
+        itemCallback();
+      }, log);
+    }, done);
+  }
+  /**
+   * Upload file on remote
+   * @param src
+   * @param target
+   * @param done
+   */
 
-                stream.stderr.on('data', function (data) {
-                    _this.logger.error('STDERR: ' + data);
-                });
 
-                stream.on('data', function (data) {
-                    if (log) {
-                        _this.logger.log('STDOUT: ' + data);
-                        return;
-                    }
+  upload(src, target, done) {
+    this.client.scp(src, extend(this.scpOptions, {
+      path: target
+    }), done);
+  }
+  /**
+   * Synchronize local folder src to remote folder target
+   * @param src
+   * @param synchronizedFolder
+   * @param done
+   */
 
-                    _this.logger.debug('STDOUT: ' + data);
-                });
 
-                stream.on('end', function () {
-                    _this.logger.debug('Remote command : ' + command);
-                    done();
-                });
-            });
+  synchronize(src, target, synchronizedFolder, done) {
+    const source = src + '/';
+    const fullTarget = this.options.username + '@' + this.options.host + ':' + synchronizedFolder; // Construct rsync command
+
+    let sshpass = ''; // Use password
+
+    if (this.options.password != '') {
+      sshpass = '--rsh=\'sshpass -p "' + this.options.password + '" ssh -l ' + this.options.username + ' -p ' + this.options.port + ' -o StrictHostKeyChecking=no\'';
+    } // Use privateKey
+    else if (this.options.privateKeyFile != null) {
+        this.logger.fatal('PrivateKey not compatible with synchronize mode.');
+      } // Concat
+
+
+    let synchronizeCommand = 'rsync ' + sshpass + ' ' + this.options.rsyncOptions + ' -a --stats --delete ' + source + ' ' + fullTarget; // Exec !
+
+    exec(synchronizeCommand, (error, stdout, stderr) => {
+      if (error) {
+        this.logger.fatal(error);
+        return;
+      }
+
+      if (stdout) {
+        this.logger.log(stdout);
+      }
+
+      if (stderr) {
+        this.logger.log(stderr);
+      }
+
+      this.synchronizeRemote(this.options.deployPath + '/' + this.options.synchronizedFolder, target, done);
+    });
+  }
+  /**
+   * Synchronize two remote folders
+   * @param src
+   * @param target
+   * @param done
+   */
+
+
+  synchronizeRemote(src, target, done) {
+    const copy = 'rsync -a ' + src + '/ ' + target;
+    this.exec(copy, () => {
+      done();
+    });
+  }
+  /**
+   * Create symbolic link on remote
+   * @param target
+   * @param link
+   * @param done
+   */
+
+
+  createSymboliclink(target, link, done) {
+    link = utils.realpath(link);
+    const symlinkTarget = utils.realpath(link + '/../' + target);
+    const commands = [`mkdir -p \`dirname ${link}\``, // Create the parent of the symlink
+    `if test ! -e ${symlinkTarget}; then mkdir -p ${symlinkTarget}; fi`, // Create the symlink target, if it doesn't exist
+    `ln -nfs ${target} ${link}`];
+    this.execMultiple(commands, done);
+  }
+  /**
+   * Chmod path on remote
+   * @param path
+   * @param mode
+   * @param done
+   */
+
+
+  chmod(path, mode, done) {
+    const command = 'chmod ' + mode + ' ' + path;
+    this.exec(command, function () {
+      done();
+    });
+  }
+  /**
+   * Create folder on remote
+   * @param path
+   * @param done
+   */
+
+
+  createFolder(path, done) {
+    const commands = ['mkdir -p ' + path, 'chmod ugo+w ' + path];
+    this.execMultiple(commands, done);
+  }
+  /**
+   * Remove old folders on remote
+   * @param folder
+   * @param numberToKeep
+   * @param done
+   */
+
+
+  removeOldFolders(folder, numberToKeep, done) {
+    const commands = ["cd " + folder + " && rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"];
+    this.execMultiple(commands, () => {
+      done();
+    });
+  }
+
+  close(done) {
+    this.connection.end();
+    this.client.close();
+    this.client.__sftp = null;
+    this.client.__ssh = null;
+    done();
+  }
+
+  getPenultimateRelease(done) {
+    return new Promise((resolve, reject) => {
+      const releasesPath = path.posix.join(this.options.deployPath, this.options.releasesFolder);
+      const getPreviousReleaseDirectoryCommand = `ls -r  -d ${releasesPath}/*/ | grep -v rollbacked | awk 'NR==2'`;
+      this.exec(getPreviousReleaseDirectoryCommand, (err, exitCode, exitSignal, stdout, stderr) => {
+        if (err) {
+          reject(err);
+          return;
         }
 
-        /**
-         * Exec multiple commands on remote using SSH connection
-         * @param commands
-         * @param done
-         * @param log Log result
-         */
+        const penultimateRelease = stdout[0];
 
-    }, {
-        key: 'execMultiple',
-        value: function execMultiple(commands, done, log) {
-            var _this2 = this;
-
-            async.eachSeries(commands, function (command, itemCallback) {
-                _this2.exec(command, function () {
-                    itemCallback();
-                }, log);
-            }, done);
+        if (!penultimateRelease) {
+          reject('No previous release to rollback to');
+          return;
         }
 
-        /**
-         * Upload file on remote
-         * @param src
-         * @param target
-         * @param done
-         */
+        resolve(penultimateRelease);
+      });
+    });
+  }
 
-    }, {
-        key: 'upload',
-        value: function upload(src, target, done) {
-            this.client.scp(src, extend(this.scpOptions, { path: target }), done);
-        }
-
-        /**
-         * Synchronize local folder src to remote folder target
-         * @param src
-         * @param synchronizedFolder
-         * @param done
-         */
-
-    }, {
-        key: 'synchronize',
-        value: function synchronize(src, target, synchronizedFolder, done) {
-            var _this3 = this;
-
-            var source = src + '/';
-            var fullTarget = this.options.username + '@' + this.options.host + ':' + synchronizedFolder;
-
-            // Construct rsync command
-            var sshpass = '';
-
-            // Use password
-            if (this.options.password != '') {
-                sshpass = '--rsh=\'sshpass -p "' + this.options.password + '" ssh -l ' + this.options.username + ' -p ' + this.options.port + ' -o StrictHostKeyChecking=no\'';
-            }
-
-            // Use privateKey
-            else if (this.options.privateKeyFile != null) {
-                    this.logger.fatal('PrivateKey not compatible with synchronize mode.');
-                }
-
-            // Concat
-            var synchronizeCommand = 'rsync ' + sshpass + ' ' + this.options.rsyncOptions + ' -a --stats --delete ' + source + ' ' + fullTarget;
-
-            // Exec !
-            exec(synchronizeCommand, function (error, stdout, stderr) {
-
-                if (error) {
-                    _this3.logger.fatal(error);
-                    return;
-                }
-
-                if (stdout) {
-                    _this3.logger.log(stdout);
-                }
-
-                if (stderr) {
-                    _this3.logger.log(stderr);
-                }
-
-                _this3.synchronizeRemote(_this3.options.deployPath + '/' + _this3.options.synchronizedFolder, target, done);
-            });
-        }
-
-        /**
-         * Synchronize two remote folders
-         * @param src
-         * @param target
-         * @param done
-         */
-
-    }, {
-        key: 'synchronizeRemote',
-        value: function synchronizeRemote(src, target, done) {
-            var copy = 'rsync -a ' + src + '/ ' + target;
-
-            this.exec(copy, function () {
-                done();
-            });
-        }
-
-        /**
-         * Create symbolic link on remote
-         * @param target
-         * @param link
-         * @param done
-         */
-
-    }, {
-        key: 'createSymboliclink',
-        value: function createSymboliclink(target, link, done) {
-            var commands = ['mkdir -p ' + link, // Create the parent of the symlink target
-            'rm -rf ' + link, 'mkdir -p ' + utils.realpath(link + '/../' + target), // Create the symlink target
-            'ln -nfs ' + target + ' ' + link];
-
-            this.execMultiple(commands, done);
-        }
-
-        /**
-         * Chmod path on remote
-         * @param path
-         * @param mode
-         * @param done
-         */
-
-    }, {
-        key: 'chmod',
-        value: function chmod(path, mode, done) {
-            var command = 'chmod ' + mode + ' ' + path;
-
-            this.exec(command, function () {
-                done();
-            });
-        }
-
-        /**
-         * Create folder on remote
-         * @param path
-         * @param done
-         */
-
-    }, {
-        key: 'createFolder',
-        value: function createFolder(path, done) {
-            var commands = ['mkdir -p ' + path, 'chmod ugo+w ' + path];
-            this.execMultiple(commands, done);
-        }
-
-        /**
-         * Remove old folders on remote
-         * @param folder
-         * @param numberToKeep
-         * @param done
-         */
-
-    }, {
-        key: 'removeOldFolders',
-        value: function removeOldFolders(folder, numberToKeep, done) {
-            var commands = ["cd " + folder + " && rm -rf `ls -r " + folder + " | awk 'NR>" + numberToKeep + "'`"];
-
-            this.execMultiple(commands, function () {
-                done();
-            });
-        }
-    }, {
-        key: 'close',
-        value: function close(done) {
-            this.connection.end();
-            this.client.close();
-            this.client.__sftp = null;
-            this.client.__ssh = null;
-            done();
-        }
-    }]);
-
-    return _class;
-}();
+};

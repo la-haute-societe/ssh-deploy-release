@@ -13,7 +13,6 @@ const utils  = require('./utils');
 
 
 module.exports = class {
-
     constructor(options) {
         this.options = new Options(options).get();
 
@@ -97,9 +96,34 @@ module.exports = class {
             this.remoteCleanupTask.bind(this),
             this.deleteLocalArchiveTask.bind(this),
             this.closeConnectionTask.bind(this),
-        ], function () {
+        ], function (err, result) {
+            // TODO: Consider calling this.closeConnectionTask() here to ensure it's closed even if an error occurs in the series
+            // TODO: Handle the case where err isn't null
             done();
         });
+    }
+
+
+    rollbackToPreviousRelease(done) {
+        done = done || this.noop;
+
+        async.series([
+            this.connectToRemoteTask.bind(this),
+            this.onBeforeRollbackTask.bind(this),
+            this.onBeforeRollbackExecuteTask.bind(this),
+            this.populatePenultimateReleaseNameTask.bind(this),
+            this.renamePenultimateReleaseTask.bind(this),
+            this.updateCurrentSymbolicLinkOnRemoteTask.bind(this),
+            this.onAfterRollbackTask.bind(this),
+            this.onAfterRollbackExecuteTask.bind(this),
+        ], (err, result) => {
+            if (err) {
+                this.logger.error(err);
+            }
+
+            this.closeConnectionTask(done);
+        });
+
     }
 
 
@@ -113,7 +137,9 @@ module.exports = class {
             this.connectToRemoteTask.bind(this),
             this.removeReleaseTask.bind(this),
             this.closeConnectionTask.bind(this),
-        ], function () {
+        ], function (err, result) {
+            // TODO: Consider calling this.closeConnectionTask() here to ensure it's closed even if an error occurs in the series
+            // TODO: Handle the case where err isn't null
             done();
         });
     }
@@ -483,7 +509,7 @@ module.exports = class {
     updateCurrentSymbolicLinkOnRemoteTask(done) {
         this.logger.subhead('Update current release symlink on remote');
 
-        const target      = this.options.releasesFolder + '/' + this.release.tag;
+        const target      = path.posix.join(this.options.releasesFolder, this.release.tag);
         const currentPath = path.posix.join(this.options.deployPath, this.options.currentReleaseLink);
 
         this.remote.createSymboliclink(
@@ -645,4 +671,77 @@ module.exports = class {
         return new Remote(options, logger, onError);
     }
 
+
+  /**
+   * @param {Function} done
+   */
+  onBeforeRollbackTask(done) {
+    this.options.onBeforeRollback(this.context, done);
+  }
+
+  /**
+   * @param {Function} done
+   */
+  onBeforeRollbackExecuteTask(done) {
+    this.middlewareCallbackExecute(this.options.onBeforeRollbackExecute, done);
+  }
+
+  /**
+   * @param {Function} done
+   */
+  populatePenultimateReleaseNameTask(done) {
+    this.logger.subhead('Get previous release path');
+
+    this.remote.getPenultimateRelease()
+      .then(penultimateReleasePath => {
+          penultimateReleasePath = penultimateReleasePath.trim().replace(new RegExp(`^${this.options.deployPath}/?${this.options.releasesFolder}/?`), '');
+          this.logger.ok(penultimateReleasePath);
+          this.penultimateReleaseName = penultimateReleasePath;
+          done();
+      })
+      .catch(err => {
+        done(err);
+    });
+  }
+
+  /**
+   * @param {Function} done
+   */
+  renamePenultimateReleaseTask(done) {
+    this.logger.subhead('Rename previous release');
+
+    const releasesPath = path.posix.join(this.options.deployPath, this.options.releasesFolder);
+    const newPreviousReleaseName = `${this.release.tag}_rollback-to_${this.penultimateReleaseName}`;
+
+    this.remote.exec(
+        [
+            'mv',
+            path.posix.join(releasesPath, this.penultimateReleaseName),
+            path.posix.join(releasesPath, newPreviousReleaseName)
+        ].join(' '),
+        (err, exitCode, exitSignal, stdout, stderr) => {
+            if (err) {
+                done(err);
+            }
+
+            this.logger.ok(`Renamed to ${newPreviousReleaseName}`);
+            this.release.tag = newPreviousReleaseName;
+            done();
+        }
+    );
+  }
+
+  /**
+   * @param {Function} done
+   */
+  onAfterRollbackTask(done) {
+    this.options.onAfterRollback(this.context, done);
+  }
+
+  /**
+   * @param {Function} done
+   */
+  onAfterRollbackExecuteTask(done) {
+    this.middlewareCallbackExecute(this.options.onAfterRollbackExecute, done);
+  }
 };

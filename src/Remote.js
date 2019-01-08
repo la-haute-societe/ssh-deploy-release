@@ -3,6 +3,7 @@ const fs         = require('fs');
 const exec       = require('child_process').exec;
 const async      = require('async');
 const extend     = require('extend');
+const path       = require('path');
 
 const utils = require('./utils');
 
@@ -12,8 +13,6 @@ const utils = require('./utils');
  * @type {{}}
  */
 module.exports = class {
-
-
     constructor(options, logger, onError) {
         this.options = options;
         this.logger  = logger;
@@ -83,21 +82,27 @@ module.exports = class {
     /**
      * Exec command on remote using SSH connection
      * @param command
-     * @param done
+     * @param {Function} done A NodeJS error first-callback. The second argument is a string representing the command output.
      * @param log Log result
      */
     exec(command, done, log) {
         this.connection.exec(command, (error, stream) => {
+            const stdout = [];
+            const stderr = [];
+
             if (error) {
                 this.onError(command, error);
+                // TODO: Envisager de passer l'erreur à done: done(error)
                 return;
             }
 
             stream.stderr.on('data', data => {
+                stderr.push(data.toString());
                 this.logger.error(`STDERR: ${data}`);
             });
 
             stream.on('data', data => {
+                stdout.push(data.toString());
                 if (log) {
                     this.logger.log(`STDOUT: ${data}`);
                     return;
@@ -106,9 +111,9 @@ module.exports = class {
                 this.logger.debug(`STDOUT: ${data}`);
             });
 
-            stream.on('end', () => {
+            stream.on('close', (exitCode, exitSignal) => {
                 this.logger.debug(`Remote command : ${command}`);
-                done();
+                done(null, exitCode, exitSignal, stdout, stderr);
             });
         });
     }
@@ -284,5 +289,27 @@ module.exports = class {
         this.client.__sftp = null;
         this.client.__ssh  = null;
         done();
+    }
+
+    getPenultimateRelease(done) {
+        return new Promise((resolve, reject) => {
+            const releasesPath = path.posix.join(this.options.deployPath, this.options.releasesFolder);
+            const getPreviousReleaseDirectoryCommand = `ls -r  -d ${releasesPath}/*/ | grep -v rollbacked | awk 'NR==2'`;
+
+            this.exec(getPreviousReleaseDirectoryCommand, (err, exitCode, exitSignal, stdout, stderr) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                const penultimateRelease = stdout[0];
+                if (!penultimateRelease) {
+                    reject('No previous release to rollback to');
+                    return;
+                }
+
+                resolve(penultimateRelease);
+            });
+        });
     }
 };

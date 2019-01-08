@@ -1,5 +1,5 @@
 {
-  "version": "2.2.2",
+  "version": "2.3.0-beta",
   "name": "ssh-deploy-release",
   "description": "Deploy release on remote server over ssh.",
   "author": "La Haute Société (http://www.lahautesociete.com)",
@@ -8,7 +8,12 @@
   "main": "dist/ssh-deploy-release.js",
   "babel": {
     "presets": [
-      "es2015"
+      ["@babel/env", {
+          "targets": {
+            "node": "8"
+          }
+        }
+      ]
     ]
   },
   "dependencies": {
@@ -25,10 +30,9 @@
     "ssh2": "^0.6.1"
   },
   "devDependencies": {
-    "babel": "^6.23.0",
-    "babel-preset-es2015": "^6.24.0",
-    "babel-register": "^6.24.0",
-    "babel-cli": "^6.24.0",
+    "@babel/cli": "^7.1.5",
+    "@babel/core": "^7.1.6",
+    "@babel/preset-env": "^7.1.6",
     "jsdom": "^9.12.0",
     "jsdom-global": "^2.1.1",
     "mocha": "^3.2.0",
@@ -36,6 +40,6 @@
   },
   "scripts": {
     "test": "mocha --compilers js:babel-core/register --require jsdom-global/register tests/**/*.spec.js",
-    "build": "node ./node_modules/babel-cli/bin/babel.js src --out-dir dist"
+    "build": "yarn babel src --out-dir dist"
   }
 }

@@ -79,11 +79,15 @@ module.exports = class Options{
             // Callback
             onBeforeDeploy: noopCallback,
             onBeforeLink: noopCallback,
+            onBeforeRollback: noopCallback,
+            onAfterRollback: noopCallback,
             onAfterDeploy: noopCallback,
 
             // Callback commands
             onBeforeDeployExecute: noopCallbackDeployer,
             onBeforeLinkExecute: noopCallbackDeployer,
+            onBeforeRollbackExecute: noopCallbackDeployer,
+            onAfterRollbackExecute: noopCallbackDeployer,
             onAfterDeployExecute: noopCallbackDeployer,
         }
     };
@@ -91,7 +95,7 @@ module.exports = class Options{
 
     /**
      * Return configuration
-     * merge deafult prop
+     * merge default prop
      */
     constructor(appOptions) {
         this.options = extend(

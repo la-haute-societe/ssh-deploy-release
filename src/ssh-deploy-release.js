@@ -29,35 +29,35 @@ module.exports = class {
         this.context = {
             options: this.options,
             release: this.release,
-            logger:  this.logger,
-            remote:  {
-                exec:               (command, done, showLog) => {
+            logger: this.logger,
+            remote: {
+                exec: (command, done, showLog) => {
                     this.remote.exec(command, done, showLog);
                 },
-                execMultiple:       (commands, done, showLog) => {
+                execMultiple: (commands, done, showLog) => {
                     this.remote.execMultiple(commands, done, showLog);
                 },
-                upload:             (src, target, done) => {
+                upload: (src, target, done) => {
                     this.remote.upload(src, target, done);
                 },
                 createSymboliclink: (target, link, done) => {
                     this.remote.createSymboliclink(target, link, done);
                 },
-                chmod:              (path, mode, done) => {
+                chmod: (path, mode, done) => {
                     this.remote.chmod(path, mode, done);
                 },
-                createFolder:       (path, done) => {
+                createFolder: (path, done) => {
                     this.remote.createFolder(path, done);
                 },
             },
 
             // 1.x.x compatibility
             // @deprecated
-            releaseTag:  this.release.tag,
+            releaseTag: this.release.tag,
             // @deprecated
             releaseName: this.release.name,
             // @deprecated
-            execRemote:  (cmd, showLog, done) => {
+            execRemote: (cmd, showLog, done) => {
                 this.remote.exec(cmd, done, showLog);
             },
         };
@@ -104,6 +104,10 @@ module.exports = class {
     }
 
 
+    /**
+     * Rollback to previous release
+     * @param done
+     */
     rollbackToPreviousRelease(done) {
         done = done || this.noop;
 
@@ -116,12 +120,11 @@ module.exports = class {
             this.updateCurrentSymbolicLinkOnRemoteTask.bind(this),
             this.onAfterRollbackTask.bind(this),
             this.onAfterRollbackExecuteTask.bind(this),
+            this.closeConnectionTask.bind(this),
         ], (err, result) => {
-            if (err) {
-                this.logger.error(err);
-            }
-
-            this.closeConnectionTask(done);
+            // TODO: Consider calling this.closeConnectionTask() here to ensure it's closed even if an error occurs in the series
+            // TODO: Handle the case where err isn't null
+            done();
         });
 
     }
@@ -208,7 +211,6 @@ module.exports = class {
             this.options,
             this.logger,
             (command, error) => {
-                console.log(command);
                 this.logger.error('Connection error', command, error);
 
                 // Clean up remote release + close connection
@@ -335,13 +337,12 @@ module.exports = class {
             "rm " + archivePath,
         ];
         async.eachSeries(commands, (command, itemDone) => {
-            console.log('EXEC'+command);
-            this.remote.exec(command, () => {console.log('callback called'+command); itemDone();});
+            this.remote.exec(command, () => {
+                itemDone();
+            });
         }, () => {
-            console.log('OK');
             spinner.stop();
             this.logger.ok('Done');
-            console.log('OK2');
             done();
         });
     }
@@ -672,76 +673,76 @@ module.exports = class {
     }
 
 
-  /**
-   * @param {Function} done
-   */
-  onBeforeRollbackTask(done) {
-    this.options.onBeforeRollback(this.context, done);
-  }
+    /**
+     * @param {Function} done
+     */
+    onBeforeRollbackTask(done) {
+        this.options.onBeforeRollback(this.context, done);
+    }
 
-  /**
-   * @param {Function} done
-   */
-  onBeforeRollbackExecuteTask(done) {
-    this.middlewareCallbackExecute(this.options.onBeforeRollbackExecute, done);
-  }
+    /**
+     * @param {Function} done
+     */
+    onBeforeRollbackExecuteTask(done) {
+        this.middlewareCallbackExecute(this.options.onBeforeRollbackExecute, done);
+    }
 
-  /**
-   * @param {Function} done
-   */
-  populatePenultimateReleaseNameTask(done) {
-    this.logger.subhead('Get previous release path');
+    /**
+     * @param {Function} done
+     */
+    populatePenultimateReleaseNameTask(done) {
+        this.logger.subhead('Get previous release path');
 
-    this.remote.getPenultimateRelease()
-      .then(penultimateReleasePath => {
-          penultimateReleasePath = penultimateReleasePath.trim().replace(new RegExp(`^${this.options.deployPath}/?${this.options.releasesFolder}/?`), '');
-          this.logger.ok(penultimateReleasePath);
-          this.penultimateReleaseName = penultimateReleasePath;
-          done();
-      })
-      .catch(err => {
-        done(err);
-    });
-  }
-
-  /**
-   * @param {Function} done
-   */
-  renamePenultimateReleaseTask(done) {
-    this.logger.subhead('Rename previous release');
-
-    const releasesPath = path.posix.join(this.options.deployPath, this.options.releasesFolder);
-    const newPreviousReleaseName = `${this.release.tag}_rollback-to_${this.penultimateReleaseName}`;
-
-    this.remote.exec(
-        [
-            'mv',
-            path.posix.join(releasesPath, this.penultimateReleaseName),
-            path.posix.join(releasesPath, newPreviousReleaseName)
-        ].join(' '),
-        (err, exitCode, exitSignal, stdout, stderr) => {
-            if (err) {
+        this.remote.getPenultimateRelease()
+            .then(penultimateReleasePath => {
+                penultimateReleasePath = penultimateReleasePath.trim().replace(new RegExp(`^${this.options.deployPath}/?${this.options.releasesFolder}/?`), '');
+                this.logger.ok(penultimateReleasePath);
+                this.penultimateReleaseName = penultimateReleasePath;
+                done();
+            })
+            .catch(err => {
                 done(err);
+            });
+    }
+
+    /**
+     * @param {Function} done
+     */
+    renamePenultimateReleaseTask(done) {
+        this.logger.subhead('Rename previous release');
+
+        const releasesPath           = path.posix.join(this.options.deployPath, this.options.releasesFolder);
+        const newPreviousReleaseName = `${this.release.tag}_rollback-to_${this.penultimateReleaseName}`;
+
+        this.remote.exec(
+            [
+                'mv',
+                path.posix.join(releasesPath, this.penultimateReleaseName),
+                path.posix.join(releasesPath, newPreviousReleaseName)
+            ].join(' '),
+            (err, exitCode, exitSignal, stdout, stderr) => {
+                if (err) {
+                    done(err);
+                }
+
+                this.logger.ok(`Renamed to ${newPreviousReleaseName}`);
+                this.release.tag = newPreviousReleaseName;
+                done();
             }
+        );
+    }
 
-            this.logger.ok(`Renamed to ${newPreviousReleaseName}`);
-            this.release.tag = newPreviousReleaseName;
-            done();
-        }
-    );
-  }
+    /**
+     * @param {Function} done
+     */
+    onAfterRollbackTask(done) {
+        this.options.onAfterRollback(this.context, done);
+    }
 
-  /**
-   * @param {Function} done
-   */
-  onAfterRollbackTask(done) {
-    this.options.onAfterRollback(this.context, done);
-  }
-
-  /**
-   * @param {Function} done
-   */
-  onAfterRollbackExecuteTask(done) {
-    this.middlewareCallbackExecute(this.options.onAfterRollbackExecute, done);
-  }
+    /**
+     * @param {Function} done
+     */
+    onAfterRollbackExecuteTask(done) {
+        this.middlewareCallbackExecute(this.options.onAfterRollbackExecute, done);
+    }
 };

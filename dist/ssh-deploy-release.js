@@ -78,15 +78,18 @@ module.exports = class {
       done();
     });
   }
+  /**
+   * Rollback to previous release
+   * @param done
+   */
+
 
   rollbackToPreviousRelease(done) {
     done = done || this.noop;
-    async.series([this.connectToRemoteTask.bind(this), this.onBeforeRollbackTask.bind(this), this.onBeforeRollbackExecuteTask.bind(this), this.populatePenultimateReleaseNameTask.bind(this), this.renamePenultimateReleaseTask.bind(this), this.updateCurrentSymbolicLinkOnRemoteTask.bind(this), this.onAfterRollbackTask.bind(this), this.onAfterRollbackExecuteTask.bind(this)], (err, result) => {
-      if (err) {
-        this.logger.error(err);
-      }
-
-      this.closeConnectionTask(done);
+    async.series([this.connectToRemoteTask.bind(this), this.onBeforeRollbackTask.bind(this), this.onBeforeRollbackExecuteTask.bind(this), this.populatePenultimateReleaseNameTask.bind(this), this.renamePenultimateReleaseTask.bind(this), this.updateCurrentSymbolicLinkOnRemoteTask.bind(this), this.onAfterRollbackTask.bind(this), this.onAfterRollbackExecuteTask.bind(this), this.closeConnectionTask.bind(this)], (err, result) => {
+      // TODO: Consider calling this.closeConnectionTask() here to ensure it's closed even if an error occurs in the series
+      // TODO: Handle the case where err isn't null
+      done();
     });
   }
   /**
@@ -154,7 +157,6 @@ module.exports = class {
     this.logger.subhead('Connect to ' + this.options.host);
     const spinner = this.logger.startSpinner('Connecting');
     this.remote = this.createRemote(this.options, this.logger, (command, error) => {
-      console.log(command);
       this.logger.error('Connection error', command, error); // Clean up remote release + close connection
       //    this.removeReleaseTask(this.closeConnectionTask(done));
     });
@@ -260,16 +262,12 @@ module.exports = class {
 
     const commands = [untarMap[this.options.archiveType], "rm " + archivePath];
     async.eachSeries(commands, (command, itemDone) => {
-      console.log('EXEC' + command);
       this.remote.exec(command, () => {
-        console.log('callback called' + command);
         itemDone();
       });
     }, () => {
-      console.log('OK');
       spinner.stop();
       this.logger.ok('Done');
-      console.log('OK2');
       done();
     });
   }

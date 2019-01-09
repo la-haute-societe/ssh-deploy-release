@@ -1,12 +1,10 @@
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
 import sinon from 'sinon';
-import async from 'async';
 
 import Deployer from '../src/ssh-deploy-release';
 import Options from '../src/Options';
 import Release from '../src/Release';
-
 
 
 describe('API', function () {
@@ -19,6 +17,11 @@ describe('API', function () {
     it('should have removeRelease method', function () {
         let deployer = new Deployer({});
         assert.property(deployer, 'removeRelease');
+    });
+
+    it('should have rollbackToPreviousRelease method', function () {
+        let deployer = new Deployer({});
+        assert.property(deployer, 'rollbackToPreviousRelease');
     });
 });
 
@@ -160,6 +163,42 @@ describe('Remove release - Tasks', function () {
 });
 
 
+describe('RollbackToPreviousRelease - Tasks', function () {
+
+    it('should call all required tasks', function (done) {
+        const requiredTasks = [
+            'connectToRemoteTask',
+            'onBeforeRollbackTask',
+            'onBeforeRollbackExecuteTask',
+            'populatePenultimateReleaseNameTask',
+            'renamePenultimateReleaseTask',
+            'updateCurrentSymbolicLinkOnRemoteTask',
+            'onAfterRollbackTask',
+            'onAfterRollbackExecuteTask',
+            'closeConnectionTask',
+        ];
+
+        let deployer = new Deployer();
+
+        const stubs = requiredTasks.map(taskName => {
+            let stub = sinon.stub(deployer, taskName).yieldsAsync();
+            return {
+                stub: stub,
+                name: taskName
+            };
+        });
+
+        deployer.rollbackToPreviousRelease(() => {
+            stubs.forEach(stub => {
+                assert(stub.stub.called, stub.name + ' method not called');
+                stub.stub.restore();
+            });
+            done();
+        });
+    });
+
+});
+
 
 describe('Deploy - Middleware callbacks', function () {
 
@@ -167,6 +206,7 @@ describe('Deploy - Middleware callbacks', function () {
         'onBeforeDeploy',
         'onBeforeLink',
         'onAfterDeploy',
+        'onAfterRollback',
     ].forEach(taskName => {
         it('should call ' + taskName + ' middleware callback', function (done) {
             const spy         = sinon.spy(function (context, done) {
@@ -188,6 +228,7 @@ describe('Deploy - Middleware callbacks', function () {
         'onBeforeDeployExecute',
         'onBeforeLinkExecute',
         'onAfterDeployExecute',
+        'onAfterRollbackExecute',
     ].forEach(taskName => {
 
         it('should call ' + taskName + ' middleware callback - no command', function (done) {
@@ -247,7 +288,7 @@ describe('Deploy - archive', function () {
     it('should instanciate Archiver', function (done) {
 
         const deployer = new Deployer({
-            mode : 'archive'
+            mode: 'archive'
         });
         deployer.logger.setEnabled(false);
 
@@ -262,7 +303,7 @@ describe('Deploy - archive', function () {
     it('should upload archive', function (done) {
 
         const deployer = new Deployer({
-            mode : 'archive'
+            mode: 'archive'
         });
         deployer.logger.setEnabled(false);
 
@@ -276,7 +317,7 @@ describe('Deploy - archive', function () {
         stub.callArg(2);
     });
 
-    it('should decompress archive on remote', function(done) {
+    it('should decompress archive on remote', function (done) {
 
         const deployer = new Deployer({
             mode: 'archive'
@@ -295,12 +336,11 @@ describe('Deploy - archive', function () {
 });
 
 
-
 describe('Deploy - synchronize', function () {
     it('should not instanciate Archiver', function (done) {
 
         const deployer = new Deployer({
-            mode : 'synchronize'
+            mode: 'synchronize'
         });
         deployer.logger.setEnabled(false);
 
@@ -315,7 +355,7 @@ describe('Deploy - synchronize', function () {
     it('should not upload archive', function (done) {
 
         const deployer = new Deployer({
-            mode : 'synchronize'
+            mode: 'synchronize'
         });
         deployer.logger.setEnabled(false);
 
@@ -329,7 +369,7 @@ describe('Deploy - synchronize', function () {
         stub.callArg(2);
     });
 
-    it('should not decompress archive on remote', function(done) {
+    it('should not decompress archive on remote', function (done) {
 
         const deployer = new Deployer({
             mode: 'synchronize'
@@ -346,18 +386,14 @@ describe('Deploy - synchronize', function () {
 });
 
 
-
-
-
-
 describe('Deploy - Remote', function () {
     it('should not able connection without credential', function () {
 
         const deployer = new Deployer();
         deployer.logger.setEnabled(false);
 
-            assert.throw(
-                () => {
+        assert.throw(
+            () => {
                 deployer.connectToRemoteTask(() => {
                     assert(spy.called);
                 })
@@ -365,7 +401,6 @@ describe('Deploy - Remote', function () {
         )
     });
 });
-
 
 
 describe('Deploy - Shared symlinks', function () {
@@ -390,14 +425,14 @@ describe('Deploy - Shared symlinks', function () {
         //
         {
             share: {
-                'target' : 'link'
+                'target': 'link'
             }
         },
         //
         {
             share: {
-                'target' : {
-                    'symlink' : 'link'
+                'target': {
+                    'symlink': 'link'
                 }
             }
         },
@@ -408,7 +443,7 @@ describe('Deploy - Shared symlinks', function () {
             deployer.logger.setEnabled(false);
 
             const createSymboliclinkStub = sinon.stub(deployer.remote, 'createSymboliclink');
-            const chmodStub = sinon.stub(deployer.remote, 'chmod');
+            const chmodStub              = sinon.stub(deployer.remote, 'chmod');
 
             deployer.updateSharedSymbolicLinkOnRemoteTask(() => {
                 assert(createSymboliclinkStub.called, 'Should call Remote.createSymboliclink method');
@@ -425,7 +460,7 @@ describe('Deploy - Shared symlinks', function () {
 
         const deployer = new Deployer({
             share: {
-                'target' : {
+                'target': {
                     symlink: 'link',
                     mode: '0777'
                 }
@@ -434,7 +469,7 @@ describe('Deploy - Shared symlinks', function () {
         deployer.logger.setEnabled(false);
 
         const createSymboliclinkStub = sinon.stub(deployer.remote, 'createSymboliclink');
-        const chmodStub = sinon.stub(deployer.remote, 'chmod');
+        const chmodStub              = sinon.stub(deployer.remote, 'chmod');
 
         deployer.updateSharedSymbolicLinkOnRemoteTask(() => {
             assert(createSymboliclinkStub.called, 'Should call Remote.createSymboliclink method');
@@ -448,7 +483,7 @@ describe('Deploy - Shared symlinks', function () {
 
 });
 
-describe('Deploy - create folder', function() {
+describe('Deploy - create folder', function () {
     it('should not create folder on remote', function (done) {
 
         const deployer = new Deployer();
@@ -483,7 +518,7 @@ describe('Deploy - create folder', function() {
 });
 
 
-describe('Deploy - make writable folder', function() {
+describe('Deploy - make writable folder', function () {
     it('should not make writable folder on remote', function (done) {
 
         const deployer = new Deployer();
@@ -518,7 +553,7 @@ describe('Deploy - make writable folder', function() {
 
 });
 
-describe('Deploy - make file executable', function() {
+describe('Deploy - make file executable', function () {
     it('should not make file executable on remote', function (done) {
         const deployer = new Deployer();
         deployer.logger.setEnabled(false);
@@ -551,7 +586,7 @@ describe('Deploy - make file executable', function() {
 });
 
 
-describe('Deploy - update currente symlink', function() {
+describe('Deploy - update current symlink', function () {
     it('should update current symlink on remote', function (done) {
         const deployer = new Deployer();
         deployer.logger.setEnabled(false);
@@ -567,7 +602,7 @@ describe('Deploy - update currente symlink', function() {
     });
 });
 
-describe('Clean up on remote', function() {
+describe('Clean up on remote', function () {
     it('should clean up releases on remote', function (done) {
         const deployer = new Deployer();
         deployer.logger.setEnabled(false);
@@ -583,12 +618,12 @@ describe('Clean up on remote', function() {
     });
 });
 
-describe('Delete local archive', function() {
+describe('Delete local archive', function () {
     it('should delete local archive', function (done) {
         const deployer = new Deployer();
         deployer.logger.setEnabled(false);
 
-        const fs = require('fs');
+        const fs         = require('fs');
         const unlinkStub = sinon.stub(fs, 'unlinkSync');
 
         deployer.deleteLocalArchiveTask(() => {
@@ -604,7 +639,7 @@ describe('Delete local archive', function() {
         });
         deployer.logger.setEnabled(false);
 
-        const fs = require('fs');
+        const fs         = require('fs');
         const unlinkStub = sinon.stub(fs, 'unlinkSync');
 
         deployer.deleteLocalArchiveTask(() => {
@@ -621,7 +656,7 @@ describe('Delete local archive', function() {
         });
         deployer.logger.setEnabled(false);
 
-        const fs = require('fs');
+        const fs         = require('fs');
         const unlinkStub = sinon.stub(fs, 'unlinkSync');
 
         deployer.deleteLocalArchiveTask(() => {

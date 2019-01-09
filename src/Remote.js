@@ -92,8 +92,6 @@ module.exports = class {
 
             if (error) {
                 this.onError(command, error);
-                // TODO: Envisager de passer l'erreur à done: done(error)
-                return;
             }
 
             stream.stderr.on('data', data => {
@@ -110,8 +108,14 @@ module.exports = class {
 
                 this.logger.debug(`STDOUT: ${data}`);
             });
-
+            
             stream.on('close', (exitCode, exitSignal) => {
+
+                // Error
+                if (exitCode !== 0) {
+                    this.logger.fatal('This command returns an error : "' + command + '"');
+                }
+
                 this.logger.debug(`Remote command : ${command}`);
                 done(null, exitCode, exitSignal, stdout, stderr);
             });
@@ -128,9 +132,11 @@ module.exports = class {
     execMultiple(commands, done, log) {
 
         async.eachSeries(commands, (command, itemCallback) => {
-            this.exec(command, () => {
+
+            this.exec(command, (error, exitCode, exitSignal, stdout, stderr) => {
                 itemCallback();
             }, log);
+
         }, done);
     }
 
@@ -226,7 +232,7 @@ module.exports = class {
      * @param done
      */
     createSymboliclink(target, link, done) {
-        link = utils.realpath(link);
+        link                = utils.realpath(link);
         const symlinkTarget = utils.realpath(link + '/../' + target);
 
         const commands = [
@@ -293,7 +299,7 @@ module.exports = class {
 
     getPenultimateRelease(done) {
         return new Promise((resolve, reject) => {
-            const releasesPath = path.posix.join(this.options.deployPath, this.options.releasesFolder);
+            const releasesPath                       = path.posix.join(this.options.deployPath, this.options.releasesFolder);
             const getPreviousReleaseDirectoryCommand = `ls -r  -d ${releasesPath}/*/ | grep -v rollbacked | awk 'NR==2'`;
 
             this.exec(getPreviousReleaseDirectoryCommand, (err, exitCode, exitSignal, stdout, stderr) => {

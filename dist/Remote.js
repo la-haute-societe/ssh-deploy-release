@@ -87,9 +87,7 @@ module.exports = class {
       const stderr = [];
 
       if (error) {
-        this.onError(command, error); // TODO: Envisager de passer l'erreur à done: done(error)
-
-        return;
+        this.onError(command, error);
       }
 
       stream.stderr.on('data', data => {
@@ -107,6 +105,11 @@ module.exports = class {
         this.logger.debug(`STDOUT: ${data}`);
       });
       stream.on('close', (exitCode, exitSignal) => {
+        // Error
+        if (exitCode !== 0) {
+          this.logger.fatal('This command returns an error : "' + command + '"');
+        }
+
         this.logger.debug(`Remote command : ${command}`);
         done(null, exitCode, exitSignal, stdout, stderr);
       });
@@ -122,7 +125,7 @@ module.exports = class {
 
   execMultiple(commands, done, log) {
     async.eachSeries(commands, (command, itemCallback) => {
-      this.exec(command, () => {
+      this.exec(command, (error, exitCode, exitSignal, stdout, stderr) => {
         itemCallback();
       }, log);
     }, done);

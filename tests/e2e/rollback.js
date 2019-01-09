@@ -10,14 +10,15 @@ const options = {
     username: server.username,
     password: server.password,
     deployPath: '/var/www/vhosts/test/httpdocs',
-
+    // mode:'archive',
+    // archiveType: 'zip',
     debug: true,
 
     share: {
-        'target-folder': 'link-name',
+        'target-folder': 'link-name'
     },
     create: [
-        'this-folder', 'and-this', 'this-file'
+        'this-folder', 'and-this'
     ],
     makeWritable: [
         'this-file'
@@ -33,8 +34,4 @@ const options = {
 
 
 const deployer = new Deployer(options);
-deployer.deployRelease();
-
-
-// const deployerRemove = new Deployer(options);
-// deployerRemove.removeRelease();
+deployer.rollbackToPreviousRelease();

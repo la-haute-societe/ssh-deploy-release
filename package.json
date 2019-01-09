@@ -8,7 +8,9 @@
   "main": "dist/ssh-deploy-release.js",
   "babel": {
     "presets": [
-      ["@babel/env", {
+      [
+        "@babel/preset-env",
+        {
           "targets": {
             "node": "8"
           }
@@ -30,16 +32,18 @@
     "ssh2": "^0.6.1"
   },
   "devDependencies": {
-    "@babel/cli": "^7.1.5",
-    "@babel/core": "^7.1.6",
-    "@babel/preset-env": "^7.1.6",
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
+    "@babel/register": "^7.0.0",
     "jsdom": "^9.12.0",
     "jsdom-global": "^2.1.1",
-    "mocha": "^3.2.0",
-    "sinon": "^1.17.7"
+    "mocha": "^5.2.0",
+    "sinon": "^7.2.2"
   },
   "scripts": {
-    "test": "mocha --compilers js:babel-core/register --require jsdom-global/register tests/**/*.spec.js",
+    "test": "mocha --require @babel/register tests/**/*.spec.js",
     "build": "yarn babel src --out-dir dist"
   }
 }

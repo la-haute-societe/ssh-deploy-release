@@ -79,6 +79,35 @@ deployer.removeRelease(() => {
 });
 ```
 
+
+### Rollback to previous release
+```js
+const Deployer = require('ssh-deploy-release');
+
+const options = {
+    localPath: 'src',
+    host: 'my.server.com',
+    username: 'username',
+    password: 'password',
+    deployPath: '/var/www/vhost/path/to/project'
+};
+
+const deployer = new Deployer(options);
+deployer.rollbackToPreviousRelease(() => {
+    console.log('Ok !')
+});
+```
+
+The previous release will be renamed before updating the symlink of the current version, for example 
+`2019-01-09-10-53-35-265-UTC` will become
+`2019-01-09-13-46-45-457-UTC_rollback-to_2019-01-09-10-53-35-265-UTC`.
+
+If `rollbackToPreviousRelease` is called several times, the current version 
+will switch between the last two releases. 
+`current date + "_rollbackTo_"`  will be prepended to the release name on each call of 
+`rollbackToPreviousRelease` so be careful not to exceed the size limit of the folder name.
+
+
 ### Use with Grunt
 
 Use [grunt-ssh-deploy-release](https://github.com/la-haute-societe/grunt-ssh-deploy-release).
@@ -329,7 +358,7 @@ The following object is passed to ``onXXXDeploy`` functions :
 ```
 
 ##### Example with onXXXDeploy
-*onBeforeDeploy, onBeforeLink, onAfterDeploy options.*
+*onBeforeDeploy, onBeforeLink, onAfterDeploy, onBeforeRollback, onAfterRollback options.*
 
 You have to call ``done`` function to continue deployment process.
 
@@ -352,7 +381,7 @@ onAfterDeploy: (context, done) => {
 ```
 
 ##### Example with onXXXDeployExecute
-*onBeforeDeployExecute, onBeforeLinkExecute, onAfterDeployExecute options.*
+*onBeforeDeployExecute, onBeforeLinkExecute, onAfterDeployExecute, onBeforeRollbackExecute, onAfterRollbackExecute options.*
 
 ```js
 onAfterDeployExecute: [
@@ -404,6 +433,34 @@ Type: ``function(context, done)``
 
 
 #### options.onAfterDeployExecute
+Array (or function returning array) of commands to execute on the remote server.
+
+Type: ``function(context) | []``
+
+
+#### options.onBeforeRollback
+Function called before rollback to previous release. 
+Call `done` to continue;
+
+Type: ``function(context, done)``
+
+
+#### options.onBeforeRollbackExecute
+Function called before rollback to previous release.
+Array (or function returning array) of commands to execute on the remote server.
+
+Type: ``function(context) | []``
+
+
+#### options.onAfterRollback
+Function called after rollback to previous release. 
+Call `done` to continue;
+
+Type: ``function(context, done)``
+
+
+#### options.onAfterRollbackExecute
+Function called after rollback to previous release.
 Array (or function returning array) of commands to execute on the remote server.
 
 Type: ``function(context) | []``

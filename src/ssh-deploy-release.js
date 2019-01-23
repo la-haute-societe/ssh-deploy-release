@@ -324,7 +324,7 @@ module.exports = class {
         const archivePath = path.posix.join(this.release.path, this.options.archiveName);
         const untarMap    = {
             'zip': "unzip -q " + archivePath + " -d " + this.release.path + "/",
-            'tar': "tar -xvf " + archivePath + " -C " + this.release.path + "/",
+            'tar': "tar -xvfm " + archivePath + " -C " + this.release.path + "/",
         };
 
         // Check archiveType is supported

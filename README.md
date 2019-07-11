@@ -215,7 +215,7 @@ Default : ``www``
 #### options.rsyncOptions
 Additional options for rsync process. 
 
-Default : ``'''``
+Default : ``''``
 
 ```js
 rsyncOptions : '--exclude-from="exclude.txt" --delete-excluded'
@@ -236,16 +236,22 @@ Name of the release. Must be different for each release.
 Default : Use current timestamp.
 
 #### options.exclude
-List of paths (*glob* format) to **not** deploy.
+List of paths to **not** deploy.
 
 Paths must be relative to `localPath`.
 
-Not compatible with `mode: 'synchronize'`, use `rsyncOptions` instead to exclude some files.
+The format slightly differ depending on the `mode`:
 
-In order to exclude a folder, you have to explicitly ignore all its descending files using ```**```.
-For example : ``['my-folder/**']``
+  * *glob* format for `mode: 'archive'`  
+    In order to exclude a folder, you have to explicitly ignore all its descending files using `**`.  
+    For example: `exclude: ['my-folder/**']`  
+    > Read [*glob* documentation](https://github.com/isaacs/node-glob) for more information.
+  * *rsync exclude pattern* format for `mode: 'synchronize'`  
+    In order to exclude a folder, you simply have to list it, all of its descendants will be excluded as well.  
+    For example: `exclude: ['my-folder']`
 
-> Read *glob* documentation for more informations : https://github.com/isaacs/node-glob
+For maximum portability, it's strongly advised to use both syntaxes when excluding folders.  
+For example: `exclude: ['my-folder/**', 'my-folder']` 
 
 Default : ``[]``
 

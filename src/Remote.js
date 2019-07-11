@@ -108,7 +108,7 @@ module.exports = class {
 
                 this.logger.debug(`STDOUT: ${data}`);
             });
-            
+
             stream.on('close', (exitCode, exitSignal) => {
 
                 // Error
@@ -182,10 +182,14 @@ module.exports = class {
             this.logger.fatal('PrivateKey not compatible with synchronize mode.');
         }
 
+        // Excludes
+        const excludes = this.options.exclude.map(path => `--exclude="${path}"`);
+
         // Concat
-        let synchronizeCommand = 'rsync ' + sshpass + ' ' + this.options.rsyncOptions + ' -a --stats --delete ' + source + ' ' + fullTarget;
+        const synchronizeCommand = `rsync ${sshpass} ${this.options.rsyncOptions} ${excludes.join(' ')} --delete-excluded -a --stats --delete ${source} ${fullTarget}`;
 
         // Exec !
+        this.logger.debug(`Local command : ${synchronizeCommand}`);
         exec(synchronizeCommand, (error, stdout, stderr) => {
 
             if (error) {

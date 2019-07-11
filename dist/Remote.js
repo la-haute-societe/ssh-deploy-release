@@ -162,11 +162,14 @@ module.exports = class {
     } // Use privateKey
     else if (this.options.privateKeyFile != null) {
         this.logger.fatal('PrivateKey not compatible with synchronize mode.');
-      } // Concat
+      } // Excludes
 
 
-    let synchronizeCommand = 'rsync ' + sshpass + ' ' + this.options.rsyncOptions + ' -a --stats --delete ' + source + ' ' + fullTarget; // Exec !
+    const excludes = this.options.exclude.map(path => `--exclude="${path}"`); // Concat
 
+    const synchronizeCommand = `rsync ${sshpass} ${this.options.rsyncOptions} ${excludes.join(' ')} --delete-excluded -a --stats --delete ${source} ${fullTarget}`; // Exec !
+
+    this.logger.debug(`Local command : ${synchronizeCommand}`);
     exec(synchronizeCommand, (error, stdout, stderr) => {
       if (error) {
         this.logger.fatal(error);

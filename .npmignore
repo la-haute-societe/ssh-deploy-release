@@ -6,4 +6,4 @@ release.tar.gz
 release.zip
 src/
 tests/
-npm-debug.log
+.git*

@@ -1,0 +1,40 @@
+image: node:8
+
+before_script:
+  - npm install
+
+cache:
+  paths:
+    - node_modules/
+
+
+stages:
+  - build
+  - test
+  - deploy
+
+
+Build:
+  stage: build
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - dist
+    expire_in: 1 week
+
+
+Test:
+  stage: test
+  script:
+    - npm run test
+
+
+Publish NPM package:
+  stage: deploy
+  only:
+    - tags
+  script:
+    - npm version --no-git-tag-version --allow-same-version $CI_BUILD_TAG
+    - echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}'>.npmrc
+#    - npm publish

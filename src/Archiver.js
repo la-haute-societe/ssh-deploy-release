@@ -25,7 +25,7 @@ module.exports = class {
 
 
     /**
-     * Comress
+     * Compress
      * @param onSuccess fn(filesize)
      * @param onError fn(err)
      */

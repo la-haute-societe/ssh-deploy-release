@@ -26,7 +26,7 @@ module.exports = class {
     this.fileName = fileName;
   }
   /**
-   * Comress
+   * Compress
    * @param onSuccess fn(filesize)
    * @param onError fn(err)
    */

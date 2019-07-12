@@ -1,5 +1,9 @@
 "use strict";
 
+var _shellEscapeTag = _interopRequireDefault(require("shell-escape-tag"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 const Connection = require('ssh2');
 
 const fs = require('fs');
@@ -155,19 +159,20 @@ module.exports = class {
     const source = src + '/';
     const fullTarget = this.options.username + '@' + this.options.host + ':' + synchronizedFolder; // Construct rsync command
 
-    let sshpass = ''; // Use password
+    let remoteShell = ''; // Use password
 
     if (this.options.password != '') {
-      sshpass = '--rsh=\'sshpass -p "' + this.options.password + '" ssh -l ' + this.options.username + ' -p ' + this.options.port + ' -o StrictHostKeyChecking=no\'';
+      remoteShell = `--rsh='sshpass -p "${this.options.password}" ssh -l ${this.options.username} -p ${this.options.port} -o StrictHostKeyChecking=no'`;
     } // Use privateKey
     else if (this.options.privateKeyFile != null) {
-        this.logger.fatal('PrivateKey not compatible with synchronize mode.');
+        const passphrase = this.options.passphrase ? _shellEscapeTag.default`sshpass -p'${this.options.passphrase}' -P"assphrase for key"` : '';
+        remoteShell = `--rsh='${passphrase} ssh -l ${this.options.username} -i ${this.options.privateKeyFile} -p ${this.options.port} -o StrictHostKeyChecking=no'`;
       } // Excludes
 
 
     const excludes = this.options.exclude.map(path => `--exclude="${path}"`); // Concat
 
-    const synchronizeCommand = `rsync ${sshpass} ${this.options.rsyncOptions} ${excludes.join(' ')} --delete-excluded -a --stats --delete ${source} ${fullTarget}`; // Exec !
+    const synchronizeCommand = `rsync ${remoteShell} ${this.options.rsyncOptions} ${excludes.join(' ')} --delete-excluded -a --stats --delete ${source} ${fullTarget}`; // Exec !
 
     this.logger.debug(`Local command : ${synchronizeCommand}`);
     exec(synchronizeCommand, (error, stdout, stderr) => {

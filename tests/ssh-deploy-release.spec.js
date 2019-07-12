@@ -25,7 +25,6 @@ describe('API', function () {
     });
 });
 
-
 describe('Options', function () {
 
     it('should set default options', function () {
@@ -41,7 +40,6 @@ describe('Options', function () {
         assert.equal(deployer.options.debug, true);
     });
 });
-
 
 describe('Release', function () {
 
@@ -131,7 +129,6 @@ describe('Deploy - Tasks', function () {
 
 });
 
-
 describe('Remove release - Tasks', function () {
 
     it('should call all required tasks', function (done) {
@@ -161,7 +158,6 @@ describe('Remove release - Tasks', function () {
     });
 
 });
-
 
 describe('RollbackToPreviousRelease - Tasks', function () {
 
@@ -198,7 +194,6 @@ describe('RollbackToPreviousRelease - Tasks', function () {
     });
 
 });
-
 
 describe('Deploy - Middleware callbacks', function () {
 
@@ -282,7 +277,6 @@ describe('Deploy - Middleware callbacks', function () {
     });
 });
 
-
 describe('Deploy - archive', function () {
 
     it('should instanciate Archiver', function (done) {
@@ -335,7 +329,6 @@ describe('Deploy - archive', function () {
     });
 });
 
-
 describe('Deploy - synchronize', function () {
     it('should not instanciate Archiver', function (done) {
 
@@ -384,24 +377,6 @@ describe('Deploy - synchronize', function () {
         });
     });
 });
-
-
-describe('Deploy - Remote', function () {
-    it('should not able connection without credential', function () {
-
-        const deployer = new Deployer();
-        deployer.logger.setEnabled(false);
-
-        assert.throw(
-            () => {
-                deployer.connectToRemoteTask(() => {
-                    assert(spy.called);
-                })
-            }
-        )
-    });
-});
-
 
 describe('Deploy - Shared symlinks', function () {
 
@@ -517,7 +492,6 @@ describe('Deploy - create folder', function () {
     });
 });
 
-
 describe('Deploy - make writable folder', function () {
     it('should not make writable folder on remote', function (done) {
 
@@ -584,7 +558,6 @@ describe('Deploy - make file executable', function () {
         execStub.callArg(1);
     });
 });
-
 
 describe('Deploy - update current symlink', function () {
     it('should update current symlink on remote', function (done) {
@@ -666,6 +639,3 @@ describe('Delete local archive', function () {
         });
     });
 });
-
-
-

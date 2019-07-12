@@ -34,7 +34,21 @@ Publish NPM package:
   stage: deploy
   only:
     - tags
+  except:
+    - /^\d+\.\d+\.\d+-.+$/ # Exclude tags having a stability tag (ex: 1.2.3-beta.1)
   script:
     - npm version --no-git-tag-version --allow-same-version $CI_BUILD_TAG
     - echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}'>.npmrc
-#    - npm publish
+    - npm publish
+
+
+Publish NPM pre-release package):
+  stage: deploy
+  only:
+    - tags
+  except:
+    - /^\d+\.\d+\.\d+$/ # Exclude tags NOT having a stability tag (ex: 1.2.3)
+  script:
+    - npm version --no-git-tag-version --allow-same-version $CI_BUILD_TAG
+    - echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}'>.npmrc
+    - npm publish --tag beta

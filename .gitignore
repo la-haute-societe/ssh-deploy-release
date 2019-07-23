@@ -1,7 +1,15 @@
 /.idea
+
+# MPM
 /node_modules
-/yarn.lock
+/package-lock.json
+/npm-debug.log
+
+# Test files
 /release.tar.gz
 /release.zip
-npm-debug.log
+
 /tests/e2e/server-config.js
+
+# Transpiled files
+/dist/*

@@ -19,7 +19,7 @@ module.exports = class {
         this.logger  = logger;
         this.onError = onError;
 
-        this.client = require('scp2');
+        this.client = require('./scp2');
 
         if (options.privateKeyFile) {
             options.privateKey = fs.readFileSync(options.privateKeyFile);

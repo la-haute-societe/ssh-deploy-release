@@ -1,9 +1,13 @@
 {
-  "version": "3.0.0-beta.1",
+  "version": "3.0.0-beta.4",
   "name": "ssh-deploy-release",
   "description": "Deploy release on remote server over ssh.",
-  "author": "La Haute Société (http://www.lahautesociete.com)",
-  "repository": "la-haute-societe/ssh-deploy-release",
+  "author": {
+    "name": "La Haute Société",
+    "url": "http://www.lahautesociete.com",
+    "email": "dev@lahautesociete.com"
+  },
+  "repository": "https://github.com/la-haute-societe/ssh-deploy-release",
   "license": "MIT",
   "main": "dist/ssh-deploy-release.js",
   "babel": {
@@ -19,6 +23,7 @@
     ]
   },
   "dependencies": {
+    "any-shell-escape": "^0.1.1",
     "archiver": "^3.0.3",
     "async": "^3.1.0",
     "chai": "^4.2.0",
@@ -28,7 +33,6 @@
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "ora": "^3.4.0",
-    "shell-escape-tag": "^1.2.2",
     "ssh2": "^0.8.5"
   },
   "devDependencies": {

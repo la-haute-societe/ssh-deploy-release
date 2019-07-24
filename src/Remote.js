@@ -1,10 +1,9 @@
-const Connection = require('ssh2');
-const fs         = require('fs');
-const exec       = require('child_process').exec;
-const async      = require('async');
-const extend     = require('extend');
-const path       = require('path');
-import shell from 'shell-escape-tag'
+const Connection  = require('ssh2');
+const fs          = require('fs');
+const exec        = require('child_process').exec;
+const async       = require('async');
+const extend      = require('extend');
+const path        = require('path');
 
 const utils = require('./utils');
 
@@ -166,30 +165,33 @@ module.exports = class {
      * @param done
      */
     synchronize(src, target, synchronizedFolder, done) {
-
         const source     = src + '/';
         const fullTarget = this.options.username + '@' + this.options.host + ':' + synchronizedFolder;
+        const escapedUsername = shellEscape(this.options.username);
 
         // Construct rsync command
         let remoteShell = '';
 
         // Use password
         if (this.options.password != '') {
-            remoteShell = `--rsh='sshpass -p "${this.options.password}" ssh -l ${this.options.username} -p ${this.options.port} -o StrictHostKeyChecking=no'`;
+            const escapedPassword = shellEscape(this.options.password);
+            remoteShell = `--rsh='sshpass -p "${escapedPassword}" ssh -l ${escapedUsername} -p ${this.options.port} -o StrictHostKeyChecking=no'`;
         }
 
         // Use privateKey
         else if (this.options.privateKeyFile != null) {
-            const passphrase = this.options.passphrase ? shell`sshpass -p'${this.options.passphrase}' -P"assphrase for key"` : '';
+            const escapedPassphrase = shellEscape(this.options.passphrase);
+            const escapedPrivateKeyFile = shellEscape(this.options.privateKeyFile);
+            const passphrase = this.options.passphrase ? `sshpass -p'${escapedPassphrase}' -P"assphrase for key"` : '';
 
-            remoteShell = `--rsh='${passphrase} ssh -l ${this.options.username} -i ${this.options.privateKeyFile} -p ${this.options.port} -o StrictHostKeyChecking=no'`;
+            remoteShell = `--rsh='${passphrase} ssh -l ${escapedUsername} -i ${escapedPrivateKeyFile} -p ${this.options.port} -o StrictHostKeyChecking=no'`;
         }
 
         // Excludes
-        const excludes = this.options.exclude.map(path => `--exclude="${path}"`);
+        const excludes = this.options.exclude.map(path => `--exclude=${shellEscape(path)}`);
 
         // Concat
-        const synchronizeCommand = `rsync ${remoteShell} ${this.options.rsyncOptions} ${excludes.join(' ')} --delete-excluded -a --stats --delete ${source} ${fullTarget}`;
+        const synchronizeCommand = `rsync ${remoteShell} ${shellEscape(this.options.rsyncOptions)} ${excludes.join(' ')} --delete-excluded -a --stats --delete ${source} ${fullTarget}`;
 
         // Exec !
         this.logger.debug(`Local command : ${synchronizeCommand}`);

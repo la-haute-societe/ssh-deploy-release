@@ -1,10 +1,10 @@
-const Connection = require('ssh2');
-const fs         = require('fs');
-const exec       = require('child_process').exec;
-const async      = require('async');
-const extend     = require('extend');
-const path       = require('path');
-import shell from 'shell-escape-tag'
+const Connection  = require('ssh2');
+const fs          = require('fs');
+const exec        = require('child_process').exec;
+const async       = require('async');
+const extend      = require('extend');
+const path        = require('path');
+const shell       = require('shell-escape-tag');
 
 const utils = require('./utils');
 

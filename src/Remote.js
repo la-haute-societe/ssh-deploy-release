@@ -4,8 +4,8 @@ const exec        = require('child_process').exec;
 const async       = require('async');
 const extend      = require('extend');
 const path        = require('path');
-
-const utils = require('./utils');
+const shellEscape = require('any-shell-escape');
+const utils       = require('./utils');
 
 
 /**

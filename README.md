@@ -1,6 +1,10 @@
 # ssh-deploy-release
 
-Deploy releases over SSH with rsync, archive ZIP / TAR, symlinks, SCP ...
+[![NPM version](https://badge.fury.io/js/ssh-deploy-release.svg)](https://badge.fury.io/js/deployator)
+![npm (tag)](https://img.shields.io/npm/v/ssh-deploy-release/beta)
+![](https://img.shields.io/npm/dm/ssh-deploy-release.svg)
+
+> Deploy releases over SSH with rsync, archive ZIP / TAR, symlinks, SCP ...
 
 
 Example :

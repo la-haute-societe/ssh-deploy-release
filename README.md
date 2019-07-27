@@ -131,29 +131,42 @@ If `true`, will display all commands.
 
 Default : `false`
 
+
 #### options.port
 Port used to connect to the remote server.
 
 Default : `22`
 
+
 #### options.host
 Remote server hostname.
+
 
 #### options.username
 Username used to connect to the remote server.
 
+
 #### options.password
 Password used to connect to the remote server.
 
+Default: `null`
+
+
 #### options.privateKeyFile
-For an encrypted private key, this is the passphrase used to decrypt it.
 
 Default: `null`
 
 
 #### options.passphrase
+For an encrypted private key, this is the passphrase used to decrypt it.
 
 Default: `null`
+
+
+#### options.agent
+To connect using the machine's ssh-agent. The value must be the path to the ssh-agent socket (usually available in the
+`SSH_AUTH_SOCK` environment variable).
+
 
 #### options.mode
 `archive` : Deploy an archive and decompress it on the remote server.
@@ -162,12 +175,14 @@ Default: `null`
 
 Default : `archive`
 
+
 #### options.archiveType
 `zip` : Use *zip* compression (`unzip` command on remote)
 
 `tar` : Use *tar gz* compression (`tar` command on remote)
 
 Default : `tar`
+
 
 #### options.archiveName
 Name of the archive.
@@ -180,10 +195,12 @@ Delete the local archive after the deployment.
 
 Default : `true`
 
+
 #### options.readyTimeout
 SCP connection timeout duration.
 
 Default : `20000`
+
 
 ### Path
 #### options.currentReleaseLink
@@ -191,30 +208,36 @@ Name of the current release symbolic link. Relative to `deployPath`.
 
 Defaut : `www`
 
+
 #### options.sharedFolder
 Name of the folder containing shared folders. Relative to `deployPath`.
 
 Default : `shared`
+
 
 #### options.releasesFolder
 Name of the folder containing releases. Relative to `deployPath`.
 
 Default : `releases`
 
+
 #### options.localPath
 Name of the local folder to deploy.
 
 Default : `www`
 
+
 #### options.deployPath
 Absolute path on the remote server where releases will be deployed.
 Do not specify *currentReleaseLink* (or *www* folder) in this path.
+
 
 #### options.synchronizedFolder
 Name of the remote folder where *rsync* synchronize release.
 Used when `mode` is 'synchronize'.
 
 Default : `www`
+
 
 #### options.rsyncOptions
 Additional options for rsync process. 

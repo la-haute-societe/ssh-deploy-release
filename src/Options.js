@@ -3,15 +3,6 @@ const extend    = require('extend');
 const timestamp = moment().utc().format('YYYY-MM-DD-HH-mm-ss-SSS-UTC');
 
 
-// Noop callback
-const noopCallback = function (deployer, callback) {
-    callback();
-};
-
-const noopCallbackDeployer = function (deployer) {
-    return [];
-};
-
 /**
  * Options
  * @type {Options}
@@ -77,18 +68,11 @@ module.exports = class Options{
             allowRemove: false,
 
             // Callback
-            onBeforeDeploy: noopCallback,
-            onBeforeLink: noopCallback,
-            onBeforeRollback: noopCallback,
-            onAfterRollback: noopCallback,
-            onAfterDeploy: noopCallback,
-
-            // Callback commands
-            onBeforeDeployExecute: noopCallbackDeployer,
-            onBeforeLinkExecute: noopCallbackDeployer,
-            onBeforeRollbackExecute: noopCallbackDeployer,
-            onAfterRollbackExecute: noopCallbackDeployer,
-            onAfterDeployExecute: noopCallbackDeployer,
+            onBeforeDeploy:   null,
+            onBeforeLink:     null,
+            onBeforeRollback: null,
+            onAfterRollback:  null,
+            onAfterDeploy:    null,
         }
     };
 
@@ -122,6 +106,4 @@ module.exports = class Options{
 
         return options;
     }
-
-
 };

@@ -54,6 +54,16 @@ function logOk(message) {
 
 
 /**
+ * Log warning message
+ * @param message
+ */
+function logWarning(message) {
+    if (!enabled) return;
+    console.log(chalk.yellow(message));
+}
+
+
+/**
  * Log error message
  * @param message
  */
@@ -106,10 +116,11 @@ function startSpinner(message) {
 module.exports = {
     fatal: logFatal,
     subhead: logSubhead,
-    ok: logOk,
-    error: logError,
-    debug: logDebug,
     log: log,
+    debug: logDebug,
+    ok: logOk,
+    warning: logWarning,
+    error: logError,
     startSpinner: startSpinner,
     setDebug: setDebug,
     setEnabled: setEnabled,

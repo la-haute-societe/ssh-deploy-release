@@ -154,14 +154,14 @@ module.exports = class {
      * @param done
      */
     onBeforeDeployTask(done) {
-        this.options.onBeforeDeploy(this.context, done);
+        this.middlewareCallbackExecute('onBeforeDeploy', done);
     }
 
     /**
      * @param done
      */
     onBeforeDeployExecuteTask(done) {
-        this.middlewareCallbackExecute(this.options.onBeforeDeployExecute, done);
+        this.middlewareCallbackExecuteLegacy('onBeforeDeploy', done);
     }
 
     /**
@@ -352,7 +352,7 @@ module.exports = class {
      * @param done
      */
     onBeforeLinkTask(done) {
-        this.options.onBeforeLink(this.context, done);
+        this.middlewareCallbackExecute('onBeforeLink', done);
     }
 
     /**
@@ -360,7 +360,7 @@ module.exports = class {
      * @param done
      */
     onBeforeLinkExecuteTask(done) {
-        this.middlewareCallbackExecute(this.options.onBeforeLinkExecute, done);
+        this.middlewareCallbackExecuteLegacy('onBeforeLink', done);
     }
 
     /**
@@ -528,7 +528,7 @@ module.exports = class {
      * @param done
      */
     onAfterDeployTask(done) {
-        this.options.onAfterDeploy(this.context, done);
+        this.middlewareCallbackExecute('onAfterDeploy', done);
     }
 
     /**
@@ -536,7 +536,7 @@ module.exports = class {
      * @param done
      */
     onAfterDeployExecuteTask(done) {
-        this.middlewareCallbackExecute(this.options.onAfterDeployExecute, done);
+        this.middlewareCallbackExecuteLegacy('onAfterDeploy', done);
     }
 
     /**
@@ -610,24 +610,60 @@ module.exports = class {
 
     // ================================================================
 
+    middlewareCallbackExecuteLegacy(eventName, callback) {
+        const legacyEventName = `${eventName}Execute`;
+        if (this.options[legacyEventName]){
+            this.logger.warning(`[DEPRECATED] ${legacyEventName} is deprecated and may be removed in a future release. Please use ${eventName} instead.`)
+        }
+        this.middlewareCallbackExecute(legacyEventName, callback);
+    }
 
     /**
      * Execute commandsFunction results
      * @param commandsFunction function | []
      * @param callback
      */
-    middlewareCallbackExecute(commandsFunction, callback) {
-        if (!commandsFunction) {
+    middlewareCallbackExecute(eventName, callback) {
+        let commands = this.options[eventName];
+        if (!commands) {
             callback();
             return;
         }
 
-        let commands = commandsFunction;
 
-        // If commandsFunction is a function, take its result as commands
-        if (typeof commandsFunction === 'function') {
-            commands = commandsFunction(this.context);
+        // If commands is a function, it can be:
+        //   * a custom callback that returns a promise
+        //   * a legacy custom callback that calls `callback` and returns nothing
+        //   * a function that returns commands to execute
+        if (typeof commands === 'function') {
+            let commandsFunctionReturnValue = commands(this.context, callback);
+
+            // Promise
+            if (commandsFunctionReturnValue instanceof Promise) {
+                commandsFunctionReturnValue.then(() => {
+                    callback();
+                }).catch(reason => {
+                    callback(`The user-supplied ${eventName} callback returned an error: ${reason}`);
+                });
+
+                return;
+            }
+
+            // Legacy custom callback
+            if (commandsFunctionReturnValue === undefined) {
+                this.logger.warning(`[DEPRECATED] ${eventName} – Node-style callback are deprecated and will be removed in a future release. Please return a Promise and call its resolve() method when you used to call the done() callback.`)
+                // No need to call callback here, the user-supplied function must have called it
+                return;
+            }
+
+            // Support single command as a string
+            if (typeof commandsFunctionReturnValue === 'string') {
+                commandsFunctionReturnValue = [commandsFunctionReturnValue];
+            }
+
+            commands = commandsFunctionReturnValue;
         }
+
 
         // Nothing to execute
         if (!commands || commands.length == 0) {
@@ -677,14 +713,14 @@ module.exports = class {
      * @param {Function} done
      */
     onBeforeRollbackTask(done) {
-        this.options.onBeforeRollback(this.context, done);
+        this.middlewareCallbackExecute('onBeforeRollback', done);
     }
 
     /**
      * @param {Function} done
      */
     onBeforeRollbackExecuteTask(done) {
-        this.middlewareCallbackExecute(this.options.onBeforeRollbackExecute, done);
+        this.middlewareCallbackExecuteLegacy('onBeforeRollback', done);
     }
 
     /**
@@ -736,13 +772,13 @@ module.exports = class {
      * @param {Function} done
      */
     onAfterRollbackTask(done) {
-        this.options.onAfterRollback(this.context, done);
+        this.middlewareCallbackExecute('onAfterRollback', done);
     }
 
     /**
      * @param {Function} done
      */
     onAfterRollbackExecuteTask(done) {
-        this.middlewareCallbackExecute(this.options.onAfterRollbackExecute, done);
+        this.middlewareCallbackExecuteLegacy('onAfterRollback', done);
     }
 };

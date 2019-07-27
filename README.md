@@ -301,10 +301,10 @@ Default: ``false``
 
 
 
-### Callback
+### Callbacks
 
 ##### context object
-The following object is passed to ``onXXXDeploy`` functions :
+The following object is passed to ``onXXX`` callbacks :
 ```js
 {
     // Loaded configuration
@@ -367,34 +367,26 @@ The following object is passed to ``onXXXDeploy`` functions :
 }
 ```
 
-##### Example with onXXXDeploy
+##### Examples
 *onBeforeDeploy, onBeforeLink, onAfterDeploy, onBeforeRollback, onAfterRollback options.*
 
-You have to call ``done`` function to continue deployment process.
+###### Single command executed on remote
 
 ```js
-onAfterDeploy: (context, done) => {
-    context.logger.subhead('Do something');
-    const spinner = context.logger.startSpinner('Doing something');
-    const command = 'ls -la';
-    const showLog = true;
-    
-    deployer.remote.exec(
-        command,
-        () => {
-            spinner.stop();
-            done();
-        },
-        showLog
-    );
-}
+onAfterDeploy: 'apachectl graceful'
 ```
 
-##### Example with onXXXDeployExecute
-*onBeforeDeployExecute, onBeforeLinkExecute, onAfterDeployExecute, onBeforeRollbackExecute, onAfterRollbackExecute options.*
+**Or** with a function :
 
 ```js
-onAfterDeployExecute: [
+onBeforeLink: context => `chgrp -R www ${context.release.path}`
+```
+
+
+###### List of commands executed on remote
+
+```js
+onAfterDeploy: [
     'do something on the remote server',
     'and another thing'
 ]
@@ -403,77 +395,61 @@ onAfterDeployExecute: [
 **Or** with a function :
 
 ```js
-onAfterDeployExecute: (context) => {
-    context.logger.subhead('Doing something');
+onBeforeLink: (context) => {
+    context.logger.subhead('Fine tuning permissions on newly deployed release');
     return [
-        'do something on the remote server',
-        'and another thing'
+        `chgrp -R www ${context.release.path}`,
+        `chmod g+w ${context.release.path}/some/path/that/needs/to/be/writable/by/www/group`,
     ];
 }
 ```
 
+
+###### Custom callback
+
+````js
+onAfterDeploy: context => {
+  return Promise((resolve, reject) => {
+    setTimeout(function () {
+      // Do something
+      resolve();
+    }, 5000);
+  });
+}
+````
+
+
+
+
 #### options.onBeforeDeploy
-Function called before deployment. Call `done` to continue;
+Executed before deployment.
 
-Type: ``function(context, done)``
-
-
-#### options.onBeforeDeployExecute
-Array (or function returning array) of commands to execute on the remote server.
-
-Type: ``function(context) | []``
+Type: `string | string[] | function(context, done): Promise | undefined`
 
 
 #### options.onBeforeLink
-Function called before symlink creation. Call `done` to continue;
+Executed before symlink creation.
 
-Type: ``function(context, done)``
-
-
-#### options.onBeforeLinkExecute
-Array (or function returning array) of commands to execute on the remote server.
-
-Type: ``function(context) | []``
+Type: `string | string[] | function(context, done): Promise | undefined`
 
 
 #### options.onAfterDeploy
-Function called after deployment. Call `done` to continue;
+Executed after deployment.
 
-Type: ``function(context, done)``
-
-
-#### options.onAfterDeployExecute
-Array (or function returning array) of commands to execute on the remote server.
-
-Type: ``function(context) | []``
+Type: `string | string[] | function(context, done): Promise | undefined`
 
 
 #### options.onBeforeRollback
-Function called before rollback to previous release. 
-Call `done` to continue;
+Executed before rollback to previous release. 
 
-Type: ``function(context, done)``
-
-
-#### options.onBeforeRollbackExecute
-Function called before rollback to previous release.
-Array (or function returning array) of commands to execute on the remote server.
-
-Type: ``function(context) | []``
+Type: `string | string[] | function(context, done): Promise | undefined`
 
 
 #### options.onAfterRollback
-Function called after rollback to previous release. 
-Call `done` to continue;
+Executed after rollback to previous release. 
 
-Type: ``function(context, done)``
+Type: `string | string[] | function(context, done): Promise | undefined`
 
-
-#### options.onAfterRollbackExecute
-Function called after rollback to previous release.
-Array (or function returning array) of commands to execute on the remote server.
-
-Type: ``function(context) | []``
 
 
 
@@ -485,7 +461,7 @@ A command on a callback method is not executed or not found.
 Try to add `set -i && source ~/.bashrc &&` before your commmand : 
 
 ```
-onAfterDeployExecute:[
+onAfterDeploy:[
     'set -i && source ~/.bashrc && my command'
 ]
 ```

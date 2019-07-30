@@ -191,7 +191,7 @@ module.exports = class {
         const excludes = this.options.exclude.map(path => `--exclude=${shellEscape(path)}`);
 
         // Concat
-        const synchronizeCommand = `rsync ${remoteShell} ${shellEscape(this.options.rsyncOptions)} ${excludes.join(' ')} --delete-excluded -a --stats --delete ${source} ${fullTarget}`;
+        const synchronizeCommand = `rsync ${remoteShell} ${this.options.rsyncOptions} ${excludes.join(' ')} --delete-excluded -a --stats --delete ${source} ${fullTarget}`;
 
         // Exec !
         this.logger.debug(`Local command : ${synchronizeCommand}`);

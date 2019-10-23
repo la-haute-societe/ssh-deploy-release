@@ -186,8 +186,26 @@ module.exports = class {
         // Excludes
         const excludes = this.options.exclude.map(path => `--exclude=${shellEscape(path)}`);
 
+        // Compression
+        let compression = this.options.compression !== false ? '--compress': '';
+        if (typeof this.options.compression === 'number') {
+            compression += ` --compress-level=${this.options.compression}`;
+        }
+
         // Concat
-        const synchronizeCommand = `rsync ${remoteShell} ${this.options.rsyncOptions} ${excludes.join(' ')} --delete-excluded -a --stats --delete ${source} ${fullTarget}`;
+        const synchronizeCommand = [
+            'rsync',
+            remoteShell,
+            this.options.rsyncOptions,
+            compression,
+            ...excludes,
+            '--delete-excluded',
+            '-a',
+            '--stats',
+            '--delete',
+            source,
+            fullTarget
+        ].join(' ');
 
         // Exec !
         this.logger.debug(`Local command : ${synchronizeCommand}`);

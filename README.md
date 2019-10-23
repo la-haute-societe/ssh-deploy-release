@@ -249,6 +249,12 @@ rsyncOptions : '--exclude-from="exclude.txt" --delete-excluded'
 ````
 
 
+#### options.compression
+Enable the rsync --compression flag. This can be set to a boolean or
+an integer to explicitly set the compression level (--compress-level=NUM).
+
+Default : `true`
+
 
 ### Releases
 

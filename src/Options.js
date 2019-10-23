@@ -43,6 +43,7 @@ module.exports = class Options{
             deployPath: '',
             synchronizedFolder: 'synchronized',
             rsyncOptions: '',
+            compression: true,
 
             // Release
             releasesToKeep: '3',

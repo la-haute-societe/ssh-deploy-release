@@ -6,6 +6,9 @@ const extend      = require('extend');
 const path        = require('path');
 const shellEscape = require('any-shell-escape');
 const utils       = require('./utils');
+const cliProgress = require('cli-progress');
+const chalk       = require('chalk');
+const humanFormat = require('human-format');
 
 
 /**
@@ -17,8 +20,6 @@ module.exports = class {
         this.options = options;
         this.logger  = logger;
         this.onError = onError;
-
-        this.client = require('./scp2');
 
         if (options.privateKeyFile) {
             options.privateKey = fs.readFileSync(options.privateKeyFile);
@@ -44,38 +45,6 @@ module.exports = class {
 
         // Connect
         this.connection.connect(this.options);
-
-        this.scpOptions = {
-            port: this.options.port,
-            host: this.options.host,
-            username: this.options.username,
-            readyTimeout: this.options.readyTimeout
-        };
-
-        // Private key authentication
-        if (this.options.privateKey) {
-            this.scpOptions.privateKey = this.options.privateKey;
-            if (this.options.passphrase) {
-                this.scpOptions.passphrase = this.options.passphrase;
-            }
-        }
-
-        // Password authentication
-        else if (this.options.password) {
-            this.scpOptions.password = this.options.password;
-        }
-
-        // Agent authentication
-        else if (this.options.agent) {
-            this.scpOptions.agent = this.options.agent;
-        }
-
-        // No authentication
-        else {
-            throw new Error('Agent, password or private key required for secure copy.');
-        }
-
-        this.client.defaults(this.scpOptions);
     }
 
 
@@ -148,14 +117,38 @@ module.exports = class {
      * @param done
      */
     upload(src, target, done) {
-        this.client.scp(
-            src,
-            extend(
-                this.scpOptions,
-                {path: target}
-            ),
-            done
-        );
+        this.connection.sftp(function(err, sftp) {
+            if (err) {
+                return done(err);
+            }
+
+            const progressBar = new cliProgress.SingleBar({
+                format:     `|${chalk.cyan('{bar}')}| {bytesTransferred}/{bytesTotal} || {percentage}% || Elapsed: {duration_formatted}`,
+                hideCursor: true
+            }, cliProgress.Presets.shades_classic);
+
+            progressBar.start(100, 0, {
+                bytesTotal:       null,
+                bytesTransferred: 0,
+            });
+
+            sftp.fastPut(src,
+                `${target}/${src}`,
+                {
+                    chunkSize: 500,
+                    step:      (bytesTransferred, chunkSize, bytesTotal) => {
+
+                        progressBar.update(bytesTransferred / bytesTotal * 100, {
+                            bytesTransferred: humanFormat(bytesTransferred, { scale: 'binary', unit: 'B' }),
+                            bytesTotal:       humanFormat(bytesTotal, { scale: 'binary', unit: 'B' }),
+                        });
+                    }
+                },
+                (err) => {
+                    progressBar.stop();
+                    done(err);
+                });
+        });
     }
 
     /**
@@ -300,9 +293,6 @@ module.exports = class {
 
     close(done) {
         this.connection.end();
-        this.client.close();
-        this.client.__sftp = null;
-        this.client.__ssh  = null;
         done();
     }
 

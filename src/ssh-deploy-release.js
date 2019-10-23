@@ -264,14 +264,11 @@ module.exports = class {
         }
 
         this.logger.subhead('Upload archive to remote');
-        let spinner = this.logger.startSpinner('Uploading');
 
         this.remote.upload(
             this.options.archiveName,
             this.release.path,
             (error) => {
-                spinner.stop();
-
                 if (error) {
                     logger.fatal(error);
                 }

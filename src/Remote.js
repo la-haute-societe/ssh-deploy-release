@@ -173,9 +173,12 @@ module.exports = class {
 
         // Use privateKey
         else if (this.options.privateKeyFile != null) {
-            const escapedPassphrase = shellEscape(this.options.passphrase);
             const escapedPrivateKeyFile = shellEscape(this.options.privateKeyFile);
-            const passphrase = this.options.passphrase ? `sshpass -p'${escapedPassphrase}' -P"assphrase for key"` : '';
+
+            let passphrase = '';
+            if (this.options.passphrase) {
+                passphrase = `sshpass -p'${(shellEscape(this.options.passphrase))}' -P"assphrase for key"`;
+            }
 
             remoteShell = `--rsh='${passphrase} ssh -l ${escapedUsername} -i ${escapedPrivateKeyFile} -p ${this.options.port} -o StrictHostKeyChecking=no'`;
         }

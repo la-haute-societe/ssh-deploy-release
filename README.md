@@ -226,6 +226,29 @@ Name of the local folder to deploy.
 
 Default : `www`
 
+⚠ ️In case you need to deploy your whole project directory, do NOT set `localPath`
+to an empty string, `null` or `.`. Use `process.cwd()` to have node generate an 
+absolute path. In addition to this, if you use the [archive mode](#optionsmode),
+don't forget to [exclude](#optionsexclude) the generated archive 
+(you can define its name using [options.archiveName](#optionsarchivename)).
+
+Example:
+
+```js
+const Deployer = require('ssh-deploy-release');
+const process  = require('process');
+
+const deployer = new Deployer({
+    localPath:   process.cwd(),
+    exclude:     ['release.tar.gz'],
+    archiveName: 'release.tar.gz',
+    host:        'my.server.com',
+    username:    'username',
+    password:    'password',
+    deployPath:  '/var/www/vhost/path/to/project',
+});
+```
+
 
 #### options.deployPath
 Absolute path on the remote server where releases will be deployed.

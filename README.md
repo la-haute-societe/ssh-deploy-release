@@ -117,6 +117,12 @@ will switch between the last two releases.
 Use [grunt-ssh-deploy-release](https://github.com/la-haute-societe/grunt-ssh-deploy-release).
 
 
+### Platform support
+
+You can use this to deploy from any platform supporting Node >= 8 to Linux servers (most UNIX systems should work as well but this hasn't been tested).
+
+Due to how we implemented the deployment process on the remote environment (using shell command execution), supporting Windows would required a lot of specific code, which would make this package harder to maintain. We decided to focus on supporting Linux as its the platform most widely used by hosting providers. 
+
 
 ## Options
 

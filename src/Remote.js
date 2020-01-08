@@ -43,8 +43,15 @@ module.exports = class {
         this.connection.on('error', onError);
         this.connection.on('close', onClose);
 
+        const connectionOptions = Object.assign({}, this.options);
+
+        // If debug is enabled, proxy output to console.log
+        if (connectionOptions.debug) {
+            connectionOptions.debug = console.log;
+        }
+
         // Connect
-        this.connection.connect(this.options);
+        this.connection.connect(connectionOptions);
     }
 
 

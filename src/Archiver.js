@@ -30,7 +30,8 @@ module.exports = class {
      * @param onError fn(err)
      */
     compress(onSuccess, onError) {
-        const archive = archiver(this.type, {});
+        const archiverOptions = this.type === 'tar' ? { gzip: true } : {}; // TODO: add a setting to customize the compression level
+        const archive = archiver(this.type, archiverOptions);
         this.output  = fs.createWriteStream(this.fileName);
 
         // On success

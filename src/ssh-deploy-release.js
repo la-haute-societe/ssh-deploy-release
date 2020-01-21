@@ -653,14 +653,13 @@ module.exports = class {
                 return;
             }
 
-            // Support single command as a string
-            if (typeof commandsFunctionReturnValue === 'string') {
-                commandsFunctionReturnValue = [commandsFunctionReturnValue];
-            }
-
             commands = commandsFunctionReturnValue;
         }
 
+        // Support single command as a string
+        if (typeof commands === 'string') {
+            commands = [commands];
+        }
 
         // Nothing to execute
         if (!commands || commands.length == 0) {

@@ -609,7 +609,7 @@ module.exports = class {
 
     middlewareCallbackExecuteLegacy(eventName, callback) {
         const legacyEventName = `${eventName}Execute`;
-        if (this.options[legacyEventName]){
+        if (this.options[legacyEventName]) {
             this.logger.warning(`[DEPRECATED] ${legacyEventName} is deprecated and may be removed in a future release. Please use ${eventName} instead.`)
         }
         this.middlewareCallbackExecute(legacyEventName, callback);
@@ -653,14 +653,13 @@ module.exports = class {
                 return;
             }
 
-            // Support single command as a string
-            if (typeof commandsFunctionReturnValue === 'string') {
-                commandsFunctionReturnValue = [commandsFunctionReturnValue];
-            }
-
             commands = commandsFunctionReturnValue;
         }
 
+        // Support single command as a string
+        if (typeof commands === 'string') {
+            commands = [commands];
+        }
 
         // Nothing to execute
         if (!commands || commands.length == 0) {

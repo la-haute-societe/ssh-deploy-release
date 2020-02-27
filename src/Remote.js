@@ -203,7 +203,7 @@ module.exports = class {
         const synchronizeCommand = [
             'rsync',
             remoteShell,
-            this.options.rsyncOptions,
+            ...this.options.rsyncOptions,
             compression,
             ...excludes,
             '--delete-excluded',

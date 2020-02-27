@@ -1,5 +1,5 @@
 {
-  "version": "3.0.3",
+  "version": "3.0.4",
   "name": "ssh-deploy-release",
   "description": "Deploy release on remote server over ssh.",
   "author": {

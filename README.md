@@ -46,7 +46,7 @@ Example :
 ### Deploy release
 
 ````js
-const Deployer = require('ssh-deploy-release');
+const Application = require('ssh-deploy-release');
 
 const options = {
     localPath: 'src',
@@ -56,7 +56,7 @@ const options = {
     deployPath: '/var/www/vhost/path/to/project'
 };
 
-const deployer = new Deployer(options);
+const deployer = new Application(options);
 deployer.deployRelease(() => {
     console.log('Ok !')
 });
@@ -66,7 +66,7 @@ deployer.deployRelease(() => {
 ### Remove release
 
 ````js
-const Deployer = require('ssh-deploy-release');
+const Application = require('ssh-deploy-release');
 
 const options = {
     localPath: 'src',
@@ -77,7 +77,7 @@ const options = {
     allowRemove: true
 };
 
-const deployer = new Deployer(options);
+const deployer = new Application(options);
 deployer.removeRelease(() => {
     console.log('Ok !')
 });
@@ -86,7 +86,7 @@ deployer.removeRelease(() => {
 
 ### Rollback to previous release
 ````js
-const Deployer = require('ssh-deploy-release');
+const Application = require('ssh-deploy-release');
 
 const options = {
     localPath: 'src',
@@ -96,7 +96,7 @@ const options = {
     deployPath: '/var/www/vhost/path/to/project'
 };
 
-const deployer = new Deployer(options);
+const deployer = new Application(options);
 deployer.rollbackToPreviousRelease(() => {
     console.log('Ok !')
 });
@@ -241,10 +241,10 @@ don't forget to [exclude](#optionsexclude) the generated archive
 Example:
 
 ```js
-const Deployer = require('ssh-deploy-release');
+const Application = require('ssh-deploy-release');
 const process  = require('process');
 
-const deployer = new Deployer({
+const deployer = new Application({
     localPath:   process.cwd(),
     exclude:     ['release.tar.gz'],
     archiveName: 'release.tar.gz',

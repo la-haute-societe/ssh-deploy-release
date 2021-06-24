@@ -15,17 +15,10 @@ const utils  = require('./utils');
 module.exports = class {
     constructor(options) {
         this.options = new Options(options).get();
-
-        this.release = new Release(
-            this.options,
-            Options.defaultOptions()
-        );
-
+        this.release = new Release(this.options, Options.defaultOptions());
         this.remote = new Remote(this.options);
-
         this.logger = logger;
         this.logger.setDebug(this.options.debug);
-
         this.context = {
             options: this.options,
             release: this.release,

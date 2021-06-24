@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 const os    = require('os');
-const ora        = require('ora');
+const ora   = require('ora');
 
 
 let debug   = false;

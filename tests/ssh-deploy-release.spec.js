@@ -138,7 +138,7 @@ describe('Remove release - Tasks', function () {
             'closeConnectionTask',
         ];
 
-        let deployer = new Deployer();
+        let deployer = new Deployer({ allowRemove: true });
 
         const stubs = requiredTasks.map(taskName => {
             let stub = sinon.stub(deployer, taskName).yieldsAsync();
@@ -153,6 +153,41 @@ describe('Remove release - Tasks', function () {
                 assert(stub.stub.called, stub.name + ' method not called');
                 stub.stub.restore();
             });
+            done();
+        });
+    });
+
+});
+
+describe('Remove release - Tasks', function () {
+
+    it('should fail if removing is not allowed', function (done) {
+        const forbiddenTasks = [
+            'connectToRemoteTask',
+            'removeReleaseTask',
+            'closeConnectionTask',
+        ];
+
+        let deployer = new Deployer();
+
+        const stubs = forbiddenTasks.map(taskName => {
+            let stub = sinon.stub(deployer, taskName).yieldsAsync();
+            return {
+                stub: stub,
+                name: taskName
+            };
+        });
+
+        const consoleWarnSpy = sinon.spy(console, 'warn');
+
+        deployer.removeRelease(() => {
+            stubs.forEach(stub => {
+                assert(!stub.stub.called, stub.name + ' method called');
+                stub.stub.restore();
+            });
+
+            const message = 'Removing is not allowed on this environment. Aborting…';
+            assert(consoleWarnSpy.calledWith(message), `console.warn('${message}') not called`);
             done();
         });
     });

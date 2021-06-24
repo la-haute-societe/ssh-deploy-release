@@ -129,6 +129,15 @@ module.exports = class {
     removeRelease(done) {
         done = done || this.noop;
 
+        if (!this.options.allowRemove) {
+            const message = 'Removing is not allowed on this environment. Aborting…';
+            console.warn(message);
+            done(message);
+            return;
+        }
+
+
+
         async.series([
             this.connectToRemoteTask.bind(this),
             this.removeReleaseTask.bind(this),

@@ -1,5 +1,5 @@
 {
-  "version": "3.0.4",
+  "version": "3.0.5",
   "name": "ssh-deploy-release",
   "description": "Deploy release on remote server over ssh.",
   "author": {
@@ -51,6 +51,6 @@
   "scripts": {
     "prepare": "npm run build",
     "test": "mocha --require @babel/register tests/**/*.spec.js",
-    "build": "yarn babel src --out-dir dist"
+    "build": "npx babel src --out-dir dist"
   }
 }

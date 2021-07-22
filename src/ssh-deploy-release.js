@@ -15,17 +15,10 @@ const utils  = require('./utils');
 module.exports = class {
     constructor(options) {
         this.options = new Options(options).get();
-
-        this.release = new Release(
-            this.options,
-            Options.defaultOptions()
-        );
-
+        this.release = new Release(this.options, Options.defaultOptions());
         this.remote = new Remote(this.options);
-
         this.logger = logger;
         this.logger.setDebug(this.options.debug);
-
         this.context = {
             options: this.options,
             release: this.release,
@@ -135,6 +128,15 @@ module.exports = class {
      */
     removeRelease(done) {
         done = done || this.noop;
+
+        if (!this.options.allowRemove) {
+            const message = 'Removing is not allowed on this environment. Aborting…';
+            console.warn(message);
+            done(message);
+            return;
+        }
+
+
 
         async.series([
             this.connectToRemoteTask.bind(this),

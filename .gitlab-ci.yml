@@ -1,7 +1,11 @@
+default:
+  tags:
+    - lhs
+
 image: node:8
 
 before_script:
-  - npm install
+  - npm ci
 
 cache:
   paths:

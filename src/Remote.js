@@ -140,7 +140,7 @@ module.exports = class {
             });
 
             sftp.fastPut(src,
-                `${target}/${src}`,
+                `${target}`,
                 {
                     chunkSize: 500,
                     step:      (bytesTransferred, chunkSize, bytesTotal) => {

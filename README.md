@@ -208,6 +208,12 @@ SCP connection timeout duration.
 Default : `20000`
 
 
+#### options.onKeyboardInteractive
+Callback passed to `ssh2` [client event](https://github.com/mscdex/ssh2/blob/v0.8.x/README.md#client-events) 
+`keyboard-interactive`.
+
+Type: `function (name, descr, lang, prompts, finish)`
+
 ### Path
 #### options.currentReleaseLink
 Name of the current release symbolic link. Relative to `deployPath`.

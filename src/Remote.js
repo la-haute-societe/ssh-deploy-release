@@ -42,6 +42,10 @@ module.exports = class {
         this.connection.on('error', onError);
         this.connection.on('close', onClose);
 
+        if (this.options.onKeyboardInteractive) {
+            this.connection.on('keyboard-interactive', this.options.onKeyboardInteractive);
+        }
+
         const connectionOptions = Object.assign({}, this.options);
 
         // If debug is enabled, proxy output to console.log

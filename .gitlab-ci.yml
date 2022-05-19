@@ -2,7 +2,7 @@ default:
   tags:
     - lhs
 
-image: node:8
+image: node:18
 
 before_script:
   - npm ci

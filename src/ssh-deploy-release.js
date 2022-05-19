@@ -69,6 +69,7 @@ module.exports = class {
         done = done || this.noop;
 
         async.series([
+            this.onBeforeConnectTask.bind(this),
             this.connectToRemoteTask.bind(this),
             this.onBeforeDeployTask.bind(this),
             this.onBeforeDeployExecuteTask.bind(this),
@@ -105,6 +106,7 @@ module.exports = class {
         done = done || this.noop;
 
         async.series([
+            this.onBeforeConnectTask.bind(this),
             this.connectToRemoteTask.bind(this),
             this.onBeforeRollbackTask.bind(this),
             this.onBeforeRollbackExecuteTask.bind(this),
@@ -139,6 +141,7 @@ module.exports = class {
 
 
         async.series([
+            this.onBeforeConnectTask.bind(this),
             this.connectToRemoteTask.bind(this),
             this.removeReleaseTask.bind(this),
             this.closeConnectionTask.bind(this),
@@ -202,10 +205,69 @@ module.exports = class {
     }
 
     /**
+     * Let power users create their own connection instance
+     * @param {Function} done
+     */
+    onBeforeConnectTask(done) {
+        if (!this.options.onBeforeConnect) {
+            return;
+        }
+
+        if (typeof this.options.onBeforeConnect !== 'function') {
+            console.error('options.onBeforeConnect must be a function. Please refer to the documentation.');
+            return;
+        }
+
+        this.logger.subhead('Open a custom connection');
+        const spinner = this.logger.startSpinner('Connecting');
+
+        this.remote = this.createRemote(
+          this.options,
+          this.logger,
+          (command, error) => {
+              this.logger.fatal('Connection error', command, error);
+          }
+        );
+
+        const connection = this.options.onBeforeConnect(
+          this.context,
+          // Ready
+          () => {
+              spinner.stop();
+              this.logger.ok('Connected');
+              done();
+          },
+          // Error
+          (error) => {
+              spinner.stop();
+              if (error) {
+                  this.logger.fatal(error);
+              }
+          },
+          // Close
+          () => {
+              this.logger.subhead("Custom connection closed");
+          }
+        );
+
+        if (!connection) {
+            this.logger.fatal('options.onBeforeConnect must return an ssh2 Client instance. Please refer to the documentation.');
+        }
+
+        this.remote.connection = connection;
+    }
+
+    /**
      *
      * @param done
      */
     connectToRemoteTask(done) {
+        if (this.remote.connection) {
+            this.logger.debug('Skipping this step as a custom connection is already open.');
+            done();
+            return;
+        }
+
         this.logger.subhead('Connect to ' + this.options.host);
         const spinner = this.logger.startSpinner('Connecting');
 
@@ -221,7 +283,7 @@ module.exports = class {
         );
 
         this.remote.connect(
-            // Success
+            // Ready
             () => {
                 spinner.stop();
                 this.logger.ok('Connected');

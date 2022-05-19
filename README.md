@@ -480,6 +480,64 @@ onAfterDeploy: context => {
 
 
 
+#### options.onBeforeConnect
+Executed before connecting to the SSH server to let you initiate a custom 
+connection. It must return a ssh2 Client instance, and call `onReady` when that
+connection is ready.
+
+Type: `function(context, onReady, onError, onClose): Client`
+
+Example: SSH jumps (connecting to your deployment server through a bastion)
+
+````js
+onBeforeConnect: (context, onReady, onError, onClose) => {
+  const bastion = new Client();
+  const connection = new Client();
+
+  bastion.on('error', onError);
+  bastion.on('close', onClose);
+  bastion.on('ready', () => {
+    bastion.forwardOut(
+      '127.0.0.1',
+      12345,
+      'www.example.com',
+      22,
+      (err, stream) => {
+        if (err) {
+          context.logger.fatal(`Error connection to the bastion: ${err}`);
+          bastion.end();
+          onClose();
+          return;
+        }
+
+        connection.connect({
+          sock: stream,
+          user: 'www-user',
+          password: 'www-password',
+        });
+      }
+    );
+  });
+
+  connection.on('error', (err) => {
+    context.logger.error(err);
+    bastion.end();
+  });
+  connection.on('close', () => {
+    bastion.end();
+  });
+  connection.on('ready', onReady);
+
+  bastion.connect({
+    host: 'bastion.example.com',
+    user: 'bastion-user',
+    password: 'bastion-password',
+  });
+
+  return connection;
+}
+````
+
 #### options.onBeforeDeploy
 Executed before deployment.
 

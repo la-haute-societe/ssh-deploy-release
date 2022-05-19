@@ -2,7 +2,6 @@
 
 # MPM
 /node_modules
-/package-lock.json
 /npm-debug.log
 
 # Test files

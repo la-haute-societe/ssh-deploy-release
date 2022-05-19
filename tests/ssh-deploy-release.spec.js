@@ -89,6 +89,7 @@ describe('Deploy - Tasks', function () {
             'onBeforeDeployTask',
             'onBeforeDeployExecuteTask',
             'compressReleaseTask',
+            'onBeforeConnectTask',
             'connectToRemoteTask',
             'createReleaseFolderOnRemoteTask',
             'uploadArchiveTask',
@@ -133,6 +134,7 @@ describe('Remove release - Tasks', function () {
 
     it('should call all required tasks', function (done) {
         const requiredTasks = [
+            'onBeforeConnectTask',
             'connectToRemoteTask',
             'removeReleaseTask',
             'closeConnectionTask',
@@ -163,6 +165,7 @@ describe('Remove release - Tasks', function () {
 
     it('should fail if removing is not allowed', function (done) {
         const forbiddenTasks = [
+            'onBeforeConnectTask',
             'connectToRemoteTask',
             'removeReleaseTask',
             'closeConnectionTask',
@@ -198,6 +201,7 @@ describe('RollbackToPreviousRelease - Tasks', function () {
 
     it('should call all required tasks', function (done) {
         const requiredTasks = [
+            'onBeforeConnectTask',
             'connectToRemoteTask',
             'onBeforeRollbackTask',
             'onBeforeRollbackExecuteTask',

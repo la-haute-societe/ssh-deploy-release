@@ -5,11 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+
+## [4.0.1] - 2022-06-02
 ### Fixed
   - Bug introduced in 4.0.0 that broke deploying in archive mode
 
 
-## [4.0.0] - 2022-06-02
+## [4.0.0] - 2022-06-02 [YANKED]
 ### Breaking change
   - fix the `remote.upload()` function (fixes [#29], closes [#30], thanks [@xstable]). 
   Read [the documentation](https://github.com/la-haute-societe/ssh-deploy-release#context-object) for more details

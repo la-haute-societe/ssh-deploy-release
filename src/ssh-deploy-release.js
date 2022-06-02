@@ -210,6 +210,7 @@ module.exports = class {
      */
     onBeforeConnectTask(done) {
         if (!this.options.onBeforeConnect) {
+            done();
             return;
         }
 

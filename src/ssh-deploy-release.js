@@ -332,7 +332,7 @@ module.exports = class {
 
         this.remote.upload(
             this.options.archiveName,
-            this.release.path,
+            `${this.release.path}/${this.options.archiveName}`,
             (error) => {
                 if (error) {
                     logger.fatal(error);

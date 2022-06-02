@@ -1,4 +1,4 @@
-const Connection  = require('ssh2');
+const {Client}    = require('ssh2');
 const fs          = require('fs');
 const exec        = require('child_process').exec;
 const async       = require('async');
@@ -35,7 +35,7 @@ module.exports = class {
     connect(onReady, onError, onClose) {
 
         // Instantiate connection
-        this.connection = new Connection();
+        this.connection = new Client();
 
         // Register events
         this.connection.on('ready', onReady);

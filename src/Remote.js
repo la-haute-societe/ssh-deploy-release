@@ -127,10 +127,12 @@ module.exports = class {
      * @param done
      */
     upload(src, target, done) {
-        this.connection.sftp(function(err, sftp) {
+        this.connection.sftp((err, sftp) => {
             if (err) {
                 return done(err);
             }
+
+            this.logger.debug(`Uploading file ${src} => ${target}`);
 
             const progressBar = new cliProgress.SingleBar({
                 format:     `|${chalk.cyan('{bar}')}| {bytesTransferred}/{bytesTotal} || {percentage}% || Elapsed: {duration_formatted}`,
@@ -142,12 +144,12 @@ module.exports = class {
                 bytesTransferred: 0,
             });
 
-            sftp.fastPut(src,
-                `${target}/${src}`,
+            sftp.fastPut(
+                src,
+                target,
                 {
                     chunkSize: 500,
-                    step:      (bytesTransferred, chunkSize, bytesTotal) => {
-
+                    step: (bytesTransferred, chunkSize, bytesTotal) => {
                         progressBar.update(bytesTransferred / bytesTotal * 100, {
                             bytesTransferred: humanFormat(bytesTransferred, { scale: 'binary', unit: 'B' }),
                             bytesTotal:       humanFormat(bytesTotal, { scale: 'binary', unit: 'B' }),
@@ -157,7 +159,8 @@ module.exports = class {
                 (err) => {
                     progressBar.stop();
                     done(err);
-                });
+                }
+            );
         });
     }
 

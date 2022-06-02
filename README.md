@@ -417,7 +417,15 @@ The following object is passed to `onXXX` callbacks :
         // Excute multiple commands (array) on the remote server
         execMultiple: (commands, done, showLog) => {},
         
-        // Upload local src file to target on the remote server
+        /* 
+         * Upload local src file to target on the remote server.
+         * @param {string} src    The path to the file to upload. 
+         *                        May be either absolute or relative to the current working directory. 
+         * @param {string} target The path of the uploaded file on the remote server. 
+         *                        Must include the filename. The full directory hierarchy to the target must already exist.
+         *                        May be either absolute or relative to the remote user home directory.
+         *                        We strongly encourage you to use `options.deployPath` in your target path to produce an absolute path.
+         */
         upload: (src, target, done) => {},
         
         // Create a symbolic link on the remote server

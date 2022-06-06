@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Read [the documentation](https://github.com/la-haute-societe/ssh-deploy-release#context-object) for more details
 ### Added
   - Ability to provide a custom connection using the `onBeforeConnect` callback
+  - Ability to use the password authentication feature of ssh2 (see [#27] thanks [@Sibyx])
 ### Updated
   - Bump ssh2 to 1.10.0
 
@@ -29,9 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.0.1] - 2020-01-16
 ## [3.0.0] - 2019-10-23
 
+[#27]: https://github.com/la-haute-societe/ssh-deploy-release/issues/27
 [#29]: https://github.com/la-haute-societe/ssh-deploy-release/issues/29
 [#30]: https://github.com/la-haute-societe/ssh-deploy-release/pull/30
 [@xstable]: https://github.com/xstable
+[@Sibyx]: https://github.com/Sibyx
 
 [Unreleased]: https://github.com/la-haute-societe/ssh-deploy-release/compare/4.0.0...HEAD
 [4.0.0]: https://github.com/la-haute-societe/ssh-deploy-release/compare/3.0.5...4.0.0

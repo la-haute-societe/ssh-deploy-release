@@ -45,7 +45,7 @@
     "@babel/register": "^7.5.5",
     "jsdom": "^15.1.1",
     "jsdom-global": "^3.0.2",
-    "mocha": "^6.2.0",
+    "mocha": "^10.2.0",
     "sinon": "^7.3.2"
   },
   "scripts": {
